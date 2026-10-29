@@ -1,6 +1,28 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import type { Inquiry, InquiryStatus } from '../types/inquiry';
-import { Mail, Phone, Clock } from 'lucide-react';
+import {
+  DndContext,
+  useDraggable,
+  useDroppable,
+  DragOverlay,
+  PointerSensor,
+  KeyboardSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+  type DragStartEvent,
+} from '@dnd-kit/core';
+import {
+  Mail,
+  Phone,
+  Clock,
+  ChevronDown,
+  ChevronUp,
+  ArrowUpDown,
+  MessageCircle,
+  Copy,
+} from 'lucide-react';
+import { toast } from 'sonner';
 
 interface InquiryBoardProps {
   inquiries: Inquiry[];
@@ -9,29 +31,365 @@ interface InquiryBoardProps {
   isLoading: boolean;
 }
 
+// Draggable Card Component
+interface BoardCardProps {
+  inquiry: Inquiry;
+  onSelectInquiry: (inquiry: Inquiry) => void;
+  onStatusChange: (id: string, newStatus: InquiryStatus) => Promise<void>;
+  isOverlay?: boolean;
+}
+
+const BoardCard: React.FC<BoardCardProps> = ({
+  inquiry,
+  onSelectInquiry,
+  onStatusChange,
+  isOverlay = false,
+}) => {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: inquiry.id,
+    data: { inquiry },
+    disabled: isOverlay,
+  });
+
+  const style = transform
+    ? {
+        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+      }
+    : undefined;
+
+  const dateStr = inquiry.created_at || inquiry.createdAt || '';
+  const diffHours = Math.floor((Date.now() - new Date(dateStr).getTime()) / (1000 * 60 * 60));
+  const diffDays = Math.floor(diffHours / 24);
+
+  // Age dot logic: neutral (<24h), amber (>24h), red (>72h) for non-resolved
+  let ageDotColor = 'bg-white/30';
+  let ageTooltip = 'Submitted recently';
+  if (inquiry.status !== 'Resolved') {
+    if (diffHours >= 72) {
+      ageDotColor = 'bg-[#F87171] ring-2 ring-[#F87171]/20';
+      ageTooltip = `Waiting ${diffDays} days (${diffHours}h)`;
+    } else if (diffHours >= 24) {
+      ageDotColor = 'bg-[#FB923C] ring-2 ring-[#FB923C]/20';
+      ageTooltip = `Waiting ${diffDays} day (${diffHours}h)`;
+    } else {
+      ageDotColor = 'bg-[#FFD60A]/80';
+      ageTooltip = `Waiting ${diffHours}h`;
+    }
+  }
+
+  const copyToClipboard = (e: React.MouseEvent, text: string, label: string) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(text);
+    toast.success(`${label} copied to clipboard`);
+  };
+
+  const digitsPhone = inquiry.phone.replace(/\D/g, '');
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      onClick={() => onSelectInquiry(inquiry)}
+      className={`p-4 rounded-xl bg-[#141414] border transition-all cursor-pointer group hover:shadow-xl relative ${
+        isDragging ? 'opacity-30 border-dashed border-[#FFD60A]' : 'border-white/10 hover:border-[#FFD60A]/50'
+      } ${isOverlay ? 'shadow-2xl border-[#FFD60A] rotate-2 scale-105 z-50 pointer-events-none' : ''}`}
+    >
+      {/* Category, Age Dot, & Relative Time */}
+      <div className="flex items-center justify-between text-[11px] mb-2">
+        <div className="flex items-center gap-1.5">
+          <span
+            className={`w-2 h-2 rounded-full ${ageDotColor}`}
+            title={ageTooltip}
+          />
+          <span className="px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-[#FFD60A] font-semibold">
+            {inquiry.category}
+          </span>
+        </div>
+        <span className="text-[#A3A3A3] flex items-center gap-1 text-[10px]">
+          <Clock className="w-3 h-3" />
+          {diffHours < 1 ? 'Just now' : diffHours < 24 ? `${diffHours}h ago` : `${diffDays}d ago`}
+        </span>
+      </div>
+
+      {/* Name & User Type */}
+      <h4 className="text-sm font-bold text-[#F5F5F5] group-hover:text-[#FFD60A] transition-colors mb-0.5 truncate">
+        {inquiry.name}
+      </h4>
+      <p className="text-xs text-[#A3A3A3] mb-3">{inquiry.user_type || inquiry.userType}</p>
+
+      {/* Contact Snippets */}
+      <div className="space-y-1 text-xs text-[#A3A3A3] mb-3">
+        <div className="flex items-center gap-1.5 truncate">
+          <Mail className="w-3 h-3 text-[#A3A3A3] shrink-0" />
+          <span className="truncate">{inquiry.email}</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <Phone className="w-3 h-3 text-[#A3A3A3] shrink-0" />
+          <span>{inquiry.phone}</span>
+        </div>
+      </div>
+
+      {/* Hover Quick Actions Bar */}
+      <div
+        className="flex items-center justify-between pt-2 border-t border-white/5 mt-2"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Quick Contact Icons */}
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={(e) => copyToClipboard(e, inquiry.email, 'Email')}
+            title="Copy Email"
+            aria-label="Copy email"
+            className="p-1 rounded text-[#A3A3A3] hover:text-[#FFD60A] hover:bg-white/5 transition-colors cursor-pointer"
+          >
+            <Copy className="w-3.5 h-3.5" />
+          </button>
+          <a
+            href={`tel:${inquiry.phone}`}
+            title="Call"
+            aria-label="Call phone"
+            className="p-1 rounded text-[#A3A3A3] hover:text-[#4ADE80] hover:bg-white/5 transition-colors"
+          >
+            <Phone className="w-3.5 h-3.5" />
+          </a>
+          <a
+            href={`https://wa.me/${digitsPhone}?text=${encodeURIComponent(
+              `Hello ${inquiry.name}, regarding your inquiry with K12 Hunar:`
+            )}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            title="WhatsApp"
+            aria-label="Chat on WhatsApp"
+            className="p-1 rounded text-[#A3A3A3] hover:text-[#22C55E] hover:bg-white/5 transition-colors"
+          >
+            <MessageCircle className="w-3.5 h-3.5" />
+          </a>
+        </div>
+
+        {/* Fallback MOVE select */}
+        <div className="flex items-center gap-1">
+          <span className="text-[10px] text-[#A3A3A3] uppercase tracking-wider">Move:</span>
+          <select
+            aria-label="Move inquiry status"
+            value={inquiry.status}
+            onChange={(e) => onStatusChange(inquiry.id, e.target.value as InquiryStatus)}
+            className="text-[11px] bg-[#171717] border border-white/10 text-[#F5F5F5] rounded px-1.5 py-0.5 focus:border-[#FFD60A] focus:outline-none cursor-pointer"
+          >
+            <option value="New">New</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Resolved">Resolved</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Droppable Column Component
+interface BoardColumnProps {
+  status: InquiryStatus;
+  label: string;
+  headerColor: string;
+  dotColor: string;
+  items: Inquiry[];
+  onSelectInquiry: (inquiry: Inquiry) => void;
+  onStatusChange: (id: string, newStatus: InquiryStatus) => Promise<void>;
+  sortOrder: 'newest' | 'oldest';
+  onToggleSort: () => void;
+  isCollapsed: boolean;
+  onToggleCollapse: () => void;
+  isOver: boolean;
+  hasJustResolved?: boolean;
+}
+
+const BoardColumn: React.FC<BoardColumnProps> = ({
+  status,
+  label,
+  headerColor,
+  dotColor,
+  items,
+  onSelectInquiry,
+  onStatusChange,
+  sortOrder,
+  onToggleSort,
+  isCollapsed,
+  onToggleCollapse,
+  isOver,
+  hasJustResolved = false,
+}) => {
+  const { setNodeRef } = useDroppable({
+    id: status,
+  });
+
+  // Calculate oldest waiting item in this column
+  const oldestWaiting = useMemo(() => {
+    if (items.length === 0) return null;
+    let oldest = items[0];
+    for (const item of items) {
+      const itemTime = new Date(item.created_at || item.createdAt || '').getTime();
+      const oldestTime = new Date(oldest.created_at || oldest.createdAt || '').getTime();
+      if (itemTime < oldestTime) oldest = item;
+    }
+    const diffHours = Math.floor((Date.now() - new Date(oldest.created_at || oldest.createdAt || '').getTime()) / 3600000);
+    return diffHours < 24 ? `${diffHours}h` : `${Math.floor(diffHours / 24)}d`;
+  }, [items]);
+
+  // Sort items according to column preference
+  const sortedItems = useMemo(() => {
+    return [...items].sort((a, b) => {
+      const timeA = new Date(a.created_at || a.createdAt || '').getTime();
+      const timeB = new Date(b.created_at || b.createdAt || '').getTime();
+      return sortOrder === 'newest' ? timeB - timeA : timeA - timeB;
+    });
+  }, [items, sortOrder]);
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={`glass-card p-4 flex flex-col min-h-[480px] transition-all duration-200 ${
+        isOver ? 'ring-2 ring-dashed ring-[#FFD60A] bg-[#FFD60A]/[0.02]' : ''
+      } ${hasJustResolved ? 'ring-2 ring-[#4ADE80] animate-pulse' : ''}`}
+    >
+      {/* Column Header */}
+      <div className="flex items-center justify-between pb-3 border-b border-white/10 mb-4">
+        <div className="flex items-center gap-2">
+          <span className={`w-2.5 h-2.5 rounded-full ${dotColor}`} />
+          <div>
+            <h3 className={`text-sm font-bold ${headerColor}`}>{label}</h3>
+            {oldestWaiting && status !== 'Resolved' && (
+              <span className="text-[10px] text-[#A3A3A3] block">
+                Oldest: {oldestWaiting}
+              </span>
+            )}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-1.5">
+          {/* Item Count */}
+          <span className="text-xs px-2 py-0.5 rounded-full bg-white/5 text-[#A3A3A3] font-semibold">
+            {items.length}
+          </span>
+
+          {/* Sort toggle (Newest vs Oldest) */}
+          <button
+            type="button"
+            onClick={onToggleSort}
+            className="p-1 rounded text-[#A3A3A3] hover:text-[#F5F5F5] hover:bg-white/5 transition-colors cursor-pointer"
+            title={`Sort: ${sortOrder === 'newest' ? 'Newest first' : 'Oldest first'}`}
+            aria-label="Toggle column sort order"
+          >
+            <ArrowUpDown className="w-3.5 h-3.5" />
+          </button>
+
+          {/* Collapse toggle */}
+          <button
+            type="button"
+            onClick={onToggleCollapse}
+            className="p-1 rounded text-[#A3A3A3] hover:text-[#F5F5F5] hover:bg-white/5 transition-colors cursor-pointer"
+            aria-label={isCollapsed ? 'Expand column' : 'Collapse column'}
+          >
+            {isCollapsed ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronUp className="w-3.5 h-3.5" />}
+          </button>
+        </div>
+      </div>
+
+      {/* Column Cards Container */}
+      {!isCollapsed && (
+        <div className="space-y-3 flex-1 overflow-y-auto max-h-[650px] pr-1">
+          {items.length === 0 ? (
+            <div
+              className={`p-10 text-center text-xs text-[#A3A3A3] border border-dashed rounded-xl transition-all ${
+                isOver ? 'border-[#FFD60A] text-[#FFD60A] bg-[#FFD60A]/5' : 'border-white/10'
+              }`}
+            >
+              {isOver ? 'Drop here to move' : `No inquiries in ${label}`}
+            </div>
+          ) : (
+            sortedItems.map((inquiry) => (
+              <BoardCard
+                key={inquiry.id}
+                inquiry={inquiry}
+                onSelectInquiry={onSelectInquiry}
+                onStatusChange={onStatusChange}
+              />
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
 export const InquiryBoard: React.FC<InquiryBoardProps> = ({
   inquiries,
   onSelectInquiry,
   onStatusChange,
   isLoading,
 }) => {
+  const [activeInquiry, setActiveInquiry] = useState<Inquiry | null>(null);
+  const [justResolved, setJustResolved] = useState<boolean>(false);
+
+  // Column Sort Preferences
+  const [columnSorts, setColumnSorts] = useState<Record<InquiryStatus, 'newest' | 'oldest'>>({
+    New: 'newest',
+    'In Progress': 'newest',
+    Resolved: 'newest',
+  });
+
+  // Column Collapse Preferences
+  const [collapsedCols, setCollapsedCols] = useState<Record<InquiryStatus, boolean>>({
+    New: false,
+    'In Progress': false,
+    Resolved: false,
+  });
+
+  // dnd-kit sensors: pointer with 5px activation distance + keyboard
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 5,
+      },
+    }),
+    useSensor(KeyboardSensor)
+  );
+
   const columns: { status: InquiryStatus; label: string; headerColor: string; dotColor: string }[] = [
     { status: 'New', label: 'New', headerColor: 'text-[#FFD60A]', dotColor: 'bg-[#FFD60A]' },
     { status: 'In Progress', label: 'In Progress', headerColor: 'text-[#FB923C]', dotColor: 'bg-[#FB923C]' },
     { status: 'Resolved', label: 'Resolved', headerColor: 'text-[#4ADE80]', dotColor: 'bg-[#4ADE80]' },
   ];
 
-  const getInquiriesByStatus = (status: InquiryStatus) => {
-    return inquiries.filter((item) => item.status === status);
+  const handleDragStart = (event: DragStartEvent) => {
+    const inquiry = event.active.data.current?.inquiry as Inquiry;
+    if (inquiry) {
+      setActiveInquiry(inquiry);
+    }
   };
 
-  const getRelativeTime = (dateStr: string) => {
-    const diff = Date.now() - new Date(dateStr).getTime();
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    if (hours < 1) return 'Just now';
-    if (hours < 24) return `${hours}h ago`;
-    const days = Math.floor(hours / 24);
-    return `${days}d ago`;
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    setActiveInquiry(null);
+
+    if (!over) return;
+    const targetStatus = over.id as InquiryStatus;
+    const currentInquiry = active.data.current?.inquiry as Inquiry;
+
+    if (!currentInquiry || currentInquiry.status === targetStatus) return;
+
+    // Trigger resolved pulse animation if moving to Resolved
+    if (targetStatus === 'Resolved') {
+      setJustResolved(true);
+      setTimeout(() => setJustResolved(false), 800);
+    }
+
+    try {
+      await onStatusChange(currentInquiry.id, targetStatus);
+    } catch {
+      // Error handled with rollback toast in parent
+    }
   };
 
   if (isLoading) {
@@ -49,90 +407,58 @@ export const InquiryBoard: React.FC<InquiryBoardProps> = ({
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 my-6 items-start">
-      {columns.map((col) => {
-        const items = getInquiriesByStatus(col.status);
+    <DndContext
+      sensors={sensors}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+    >
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 my-6 items-start">
+        {columns.map((col) => {
+          const items = inquiries.filter((item) => item.status === col.status);
 
-        return (
-          <div key={col.status} className="glass-card p-4 flex flex-col min-h-[450px]">
-            {/* Column Header */}
-            <div className="flex items-center justify-between pb-3 border-b border-white/10 mb-4">
-              <div className="flex items-center gap-2">
-                <span className={`w-2.5 h-2.5 rounded-full ${col.dotColor}`} />
-                <h3 className={`text-sm font-bold ${col.headerColor}`}>{col.label}</h3>
-              </div>
-              <span className="text-xs px-2 py-0.5 rounded-full bg-white/5 text-[#A3A3A3] font-semibold">
-                {items.length}
-              </span>
-            </div>
+          return (
+            <BoardColumn
+              key={col.status}
+              status={col.status}
+              label={col.label}
+              headerColor={col.headerColor}
+              dotColor={col.dotColor}
+              items={items}
+              onSelectInquiry={onSelectInquiry}
+              onStatusChange={onStatusChange}
+              sortOrder={columnSorts[col.status]}
+              onToggleSort={() =>
+                setColumnSorts((prev) => ({
+                  ...prev,
+                  [col.status]: prev[col.status] === 'newest' ? 'oldest' : 'newest',
+                }))
+              }
+              isCollapsed={collapsedCols[col.status]}
+              onToggleCollapse={() =>
+                setCollapsedCols((prev) => ({
+                  ...prev,
+                  [col.status]: !prev[col.status],
+                }))
+              }
+              isOver={false}
+              hasJustResolved={col.status === 'Resolved' && justResolved}
+            />
+          );
+        })}
+      </div>
 
-            {/* Column Cards */}
-            <div className="space-y-3 flex-1 overflow-y-auto max-h-[650px] pr-1">
-              {items.length === 0 ? (
-                <div className="p-8 text-center text-xs text-[#A3A3A3] border border-dashed border-white/10 rounded-xl">
-                  No inquiries in {col.label}
-                </div>
-              ) : (
-                items.map((inquiry) => (
-                  <div
-                    key={inquiry.id}
-                    onClick={() => onSelectInquiry(inquiry)}
-                    className="p-4 rounded-xl bg-[#141414] border border-white/10 hover:border-[#FFD60A]/40 transition-all cursor-pointer group hover:shadow-lg"
-                  >
-                    {/* Category & Time */}
-                    <div className="flex items-center justify-between text-[11px] mb-2">
-                      <span className="px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-[#FFD60A] font-medium">
-                        {inquiry.category}
-                      </span>
-                      <span className="text-[#A3A3A3] flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
-                        {getRelativeTime(inquiry.created_at)}
-                      </span>
-                    </div>
-
-                    {/* Name & User Type */}
-                    <h4 className="text-sm font-semibold text-[#F5F5F5] group-hover:text-[#FFD60A] transition-colors mb-1">
-                      {inquiry.name}
-                    </h4>
-                    <p className="text-xs text-[#A3A3A3] mb-3">{inquiry.user_type}</p>
-
-                    {/* Contact Snippets */}
-                    <div className="space-y-1 text-xs text-[#A3A3A3] mb-3">
-                      <div className="flex items-center gap-1.5 truncate">
-                        <Mail className="w-3 h-3 text-[#A3A3A3]" />
-                        <span className="truncate">{inquiry.email}</span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <Phone className="w-3 h-3 text-[#A3A3A3]" />
-                        <span>{inquiry.phone}</span>
-                      </div>
-                    </div>
-
-                    {/* Quick Move Selector */}
-                    <div
-                      className="pt-2 border-t border-white/5 flex items-center justify-between"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <span className="text-[10px] text-[#A3A3A3] uppercase tracking-wider">Move:</span>
-                      <select
-                        aria-label="Move inquiry status"
-                        value={inquiry.status}
-                        onChange={(e) => onStatusChange(inquiry.id, e.target.value as InquiryStatus)}
-                        className="text-[11px] bg-[#171717] border border-white/10 text-[#F5F5F5] rounded px-2 py-0.5 focus:border-[#FFD60A] focus:outline-none"
-                      >
-                        <option value="New">New</option>
-                        <option value="In Progress">In Progress</option>
-                        <option value="Resolved">Resolved</option>
-                      </select>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        );
-      })}
-    </div>
+      {/* Lifted Drag Overlay */}
+      <DragOverlay dropAnimation={{ duration: 200, easing: 'ease' }}>
+        {activeInquiry ? (
+          <BoardCard
+            inquiry={activeInquiry}
+            onSelectInquiry={() => {}}
+            onStatusChange={async () => {}}
+            isOverlay={true}
+          />
+        ) : null}
+      </DragOverlay>
+    </DndContext>
   );
 };
 

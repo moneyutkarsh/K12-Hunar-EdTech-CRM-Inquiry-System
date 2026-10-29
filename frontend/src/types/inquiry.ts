@@ -23,6 +23,33 @@ export interface InquiryStats {
   new: number;
   inProgress: number;
   resolved: number;
+  range?: string;
+  previous?: number;
+  deltaPct?: number;
+  deltas?: {
+    total: number;
+    new: number;
+    inProgress: number;
+    resolved: number;
+  };
+  sparkline?: number[];
+  sparklines?: {
+    total: number[];
+    new: number[];
+    inProgress: number[];
+    resolved: number[];
+  };
+}
+
+export interface SecondaryKpis {
+  todayCount: number;
+  needsAttentionCount: number;
+  avgFirstResponseHours: number;
+  resolutionRate: number;
+  busiestCategory: {
+    name: string;
+    count: number;
+  };
 }
 
 export interface PaginationMeta {

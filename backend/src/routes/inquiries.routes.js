@@ -4,9 +4,11 @@ import {
   list,
   getById,
   updateStatus,
+  bulkUpdateStatus,
   addNote,
   getNotes,
   stats,
+  kpis,
   analytics,
   exportCsv,
 } from '../controllers/inquiries.controller.js';
@@ -30,8 +32,14 @@ router.post('/', inquiryLimiter, validate(createInquirySchema), asyncHandler(cre
 // Protected: Aggregate statistics (total, new, in progress, resolved, last24h, last7d)
 router.get('/stats', auth, asyncHandler(stats));
 
-// Protected: Analytics (30-day daily counts and breakdowns)
+// Protected: Secondary KPIs (today, avg response time, resolution rate, busiest category)
+router.get('/kpis', auth, asyncHandler(kpis));
+
+// Protected: Analytics (daily counts, breakdowns, funnel, heatmap)
 router.get('/analytics', auth, asyncHandler(analytics));
+
+// Protected: Bulk update inquiry status
+router.patch('/bulk-status', auth, asyncHandler(bulkUpdateStatus));
 
 // Protected: Export filtered inquiries as CSV
 router.get('/export', auth, validate(inquiryQuerySchema, 'query'), asyncHandler(exportCsv));

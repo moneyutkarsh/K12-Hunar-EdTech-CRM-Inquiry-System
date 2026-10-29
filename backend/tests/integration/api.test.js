@@ -212,5 +212,31 @@ describe('Integration Tests: Complete API Suite', () => {
       expect(Array.isArray(res.body.data.notes)).toBe(true);
       expect(Array.isArray(res.body.data.activity)).toBe(true);
     });
+
+    it('GET /api/inquiries/kpis returns secondary KPI metrics', async () => {
+      const res = await request(app)
+        .get('/api/inquiries/kpis')
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(res.status).toBe(200);
+      expect(typeof res.body.todayCount).toBe('number');
+      expect(typeof res.body.needsAttentionCount).toBe('number');
+      expect(typeof res.body.avgFirstResponseHours).toBe('number');
+      expect(typeof res.body.resolutionRate).toBe('number');
+      expect(res.body.busiestCategory).toBeDefined();
+    });
+
+    it('PATCH /api/inquiries/bulk-status updates multiple inquiries', async () => {
+      if (!createdInquiryId) return;
+
+      const res = await request(app)
+        .patch('/api/inquiries/bulk-status')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({ ids: [createdInquiryId], status: 'In Progress' });
+
+      expect(res.status).toBe(200);
+      expect(res.body.updatedCount).toBeGreaterThanOrEqual(1);
+      expect(res.body.status).toBe('In Progress');
+    });
   });
 });

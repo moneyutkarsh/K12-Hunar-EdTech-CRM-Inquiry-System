@@ -51,9 +51,22 @@ export async function listInquiries({
   order = 'desc',
   page = 1,
   limit = 10,
+  ids,
 }) {
   const conditions = [];
   const params = [];
+
+  // Filter by specific IDs (e.g. for bulk export)
+  if (ids) {
+    const idList = (Array.isArray(ids) ? ids : ids.split(',')).map((id) => id.trim()).filter(Boolean);
+    if (idList.length > 0) {
+      const placeholders = idList.map((id) => {
+        params.push(id);
+        return `$${params.length}`;
+      });
+      conditions.push(`id IN (${placeholders.join(', ')})`);
+    }
+  }
 
   // 1. Category filter (supports comma-separated list)
   if (category) {
@@ -229,3 +242,24 @@ export async function updateInquiryStatus(id, newStatus) {
     updated_at: r.updated_at,
   };
 }
+
+export async function bulkUpdateInquiryStatus(ids, newStatus, adminId) {
+  if (!ids || ids.length === 0) return 0;
+  let count = 0;
+  for (const id of ids) {
+    const res = await query(
+      `UPDATE inquiries SET status = $1, updated_at = NOW() WHERE id = $2 RETURNING id`,
+      [newStatus, id]
+    );
+    if (res.rowCount > 0) {
+      count += res.rowCount;
+      await query(
+        `INSERT INTO activity_log (inquiry_id, admin_id, action, from_value, to_value, created_at)
+         VALUES ($1, $2, 'status_changed', NULL, $3, NOW())`,
+        [id, adminId, newStatus]
+      );
+    }
+  }
+  return count;
+}
+
