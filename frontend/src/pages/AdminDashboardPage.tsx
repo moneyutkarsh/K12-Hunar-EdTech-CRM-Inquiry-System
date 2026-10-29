@@ -90,6 +90,7 @@ export const AdminDashboardPage: React.FC = () => {
     inProgress: 0,
     resolved: 0,
   });
+  const [assignedToMeCount, setAssignedToMeCount] = useState<number>(0);
 
   // Secondary KPIs state
   const [secondaryKpis, setSecondaryKpis] = useState<SecondaryKpis | null>(null);
@@ -260,11 +261,23 @@ export const AdminDashboardPage: React.FC = () => {
         }
         previousTotalRef.current = incoming.total;
         setStats(incoming);
+
+        // Fetch assigned-to-me count for current logged in admin
+        try {
+          const assignedRes = await api.get('/inquiries', {
+            params: { assignedTo: 'me', limit: 1 },
+          });
+          if (assignedRes.data?.pagination) {
+            setAssignedToMeCount(Number(assignedRes.data.pagination.total || 0));
+          }
+        } catch {
+          // Handled silently
+        }
       } catch {
         // Handled silently
       }
     },
-    [fetchInquiries]
+    [fetchInquiries, admin?.id]
   );
 
   // Fetch Secondary KPIs
@@ -289,7 +302,14 @@ export const AdminDashboardPage: React.FC = () => {
   useEffect(() => {
     fetchStats(false);
     fetchKpis();
-  }, [fetchStats, fetchKpis]);
+  }, [fetchStats, fetchKpis, admin?.id]);
+
+  // Re-fetch all data whenever the logged in admin user changes
+  useEffect(() => {
+    fetchInquiries();
+    fetchStats(false);
+    fetchKpis();
+  }, [admin?.id]);
 
   // New-inquiry awareness: poll /stats every 30s while tab is visible
   useEffect(() => {
@@ -715,6 +735,9 @@ export const AdminDashboardPage: React.FC = () => {
                     <User className="w-3.5 h-3.5 text-[#FFD60A]" />
                     <span>Assigned to Me</span>
                   </span>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#FFD60A]/10 text-[#FFD60A] font-semibold">
+                    {assignedToMeCount}
+                  </span>
                 </button>
 
                 <button
@@ -809,8 +832,10 @@ export const AdminDashboardPage: React.FC = () => {
         <div className="pt-4 border-t border-white/10 space-y-3 w-full">
           {!isSidebarCollapsed ? (
             <div className="px-2">
-              <p className="text-xs font-medium text-[#F5F5F5] truncate">{admin?.email}</p>
-              <p className="text-[10px] text-[#FFD60A] font-medium">Administrator</p>
+              <p className="text-xs font-medium text-[#F5F5F5] truncate">{admin?.name || admin?.email}</p>
+              <p className="text-[10px] text-[#FFD60A] font-medium">
+                {admin?.role === 'superadmin' ? 'Superadmin' : 'Administrator'}
+              </p>
             </div>
           ) : (
             <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-xs font-bold text-[#FFD60A] mx-auto">
@@ -836,7 +861,7 @@ export const AdminDashboardPage: React.FC = () => {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
             <h1 className="text-2xl sm:text-3xl font-extrabold text-[#F5F5F5] tracking-tight">
-              {greeting}, <span className="text-[#FFD60A]">Admin</span>
+              {greeting}, <span className="text-[#FFD60A]">{admin?.name || admin?.email?.split('@')[0] || 'Admin'}</span>
             </h1>
             <p className="text-xs text-[#A3A3A3] flex items-center gap-1.5 mt-1">
               <Calendar className="w-3.5 h-3.5 text-[#FFD60A]" />

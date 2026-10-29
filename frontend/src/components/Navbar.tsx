@@ -234,8 +234,12 @@ export const Navbar: React.FC = () => {
 
               <div className="flex items-center gap-2 pl-3 border-l border-white/10">
                 <div className="text-right">
-                  <p className="text-xs font-medium text-[#F5F5F5] leading-tight">{admin?.email}</p>
-                  <p className="text-[10px] text-[#FFD60A]">Admin</p>
+                  <p className="text-xs font-medium text-[#F5F5F5] leading-tight truncate max-w-[160px]" title={admin?.email}>
+                    {admin?.name || admin?.email}
+                  </p>
+                  <p className="text-[10px] text-[#FFD60A]">
+                    {admin?.role === 'superadmin' ? 'Superadmin' : 'Administrator'}
+                  </p>
                 </div>
                 <button
                   onClick={logout}
