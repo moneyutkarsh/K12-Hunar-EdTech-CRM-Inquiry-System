@@ -22,6 +22,7 @@ import {
   X,
 } from 'lucide-react';
 import { api } from '../lib/api';
+import GlowingYellowOrb from '../components/GlowingYellowOrb';
 
 interface PublicStats {
   handledApprox: number;
@@ -261,73 +262,81 @@ export const HomePage: React.FC = () => {
           id="home-hero-section"
           className="relative pt-16 sm:pt-24 pb-20 sm:pb-32 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto"
         >
-          <div className="max-w-3xl">
-            {/* Eyebrow Chip */}
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FFD60A]/10 border border-[#FFD60A]/30 text-[#FFD60A] text-xs font-semibold mb-6">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>EdTech inquiries, handled transparently</span>
-            </div>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+            {/* Left Content Column */}
+            <div className="lg:col-span-7">
+              {/* Eyebrow Chip */}
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FFD60A]/10 border border-[#FFD60A]/30 text-[#FFD60A] text-xs font-semibold mb-6">
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>EdTech inquiries, handled transparently</span>
+              </div>
 
-            {/* Word-by-Word Reveal Headline */}
-            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-[#F5F5F5] tracking-tight leading-[1.12] mb-6">
-              {headlineWords.map((word, idx) => (
+              {/* Word-by-Word Reveal Headline */}
+              <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-[#F5F5F5] tracking-tight leading-[1.12] mb-6">
+                {headlineWords.map((word, idx) => (
+                  <motion.span
+                    key={idx}
+                    initial={prefersReducedMotion ? false : { opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.35, delay: idx * 0.08 }}
+                    className="inline-block mr-2.5 sm:mr-3.5"
+                  >
+                    {word}
+                  </motion.span>
+                ))}
                 <motion.span
-                  key={idx}
                   initial={prefersReducedMotion ? false : { opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.35, delay: idx * 0.08 }}
-                  className="inline-block mr-2.5 sm:mr-3.5"
+                  transition={{ duration: 0.45, delay: 0.35 }}
+                  className="text-[#FFD60A] block sm:inline-block"
                 >
-                  {word}
+                  {headlineAccent}
                 </motion.span>
-              ))}
-              <motion.span
-                initial={prefersReducedMotion ? false : { opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.45, delay: 0.35 }}
-                className="text-[#FFD60A] block sm:inline-block"
-              >
-                {headlineAccent}
-              </motion.span>
-            </h1>
+              </h1>
 
-            {/* Subheading */}
-            <p className="text-base sm:text-lg text-[#A3A3A3] leading-relaxed mb-8 max-w-2xl">
-              Connect directly with the K12 Hunar admissions committee, merit scholarship board, and festival teams. Every inquiry receives a dedicated reference code and a guaranteed 24-hour response.
-            </p>
+              {/* Subheading */}
+              <p className="text-base sm:text-lg text-[#A3A3A3] leading-relaxed mb-8 max-w-2xl">
+                Connect directly with the K12 Hunar admissions committee, merit scholarship board, and festival teams. Every inquiry receives a dedicated reference code and a guaranteed 24-hour response.
+              </p>
 
-            {/* Dual CTAs */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 mb-12">
-              <Link
-                to="/inquiry"
-                className="px-6 py-3.5 rounded-xl bg-[#FFD60A] hover:bg-[#FFE14D] active:bg-[#E6BF00] text-[#0A0A0A] font-bold text-sm shadow-lg shadow-[#FFD60A]/10 transition-all flex items-center justify-center gap-2 group cursor-pointer"
-              >
-                <span>Submit an inquiry</span>
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </Link>
-              <Link
-                to="/track"
-                className="px-6 py-3.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 text-[#F5F5F5] font-semibold text-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <Search className="w-4 h-4 text-[#FFD60A]" />
-                <span>Track existing inquiry</span>
-              </Link>
+              {/* Dual CTAs */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 mb-12">
+                <Link
+                  to="/inquiry"
+                  className="px-6 py-3.5 rounded-xl bg-[#FFD60A] hover:bg-[#FFE14D] active:bg-[#E6BF00] text-[#0A0A0A] font-bold text-sm shadow-lg shadow-[#FFD60A]/10 transition-all flex items-center justify-center gap-2 group cursor-pointer"
+                >
+                  <span>Submit an inquiry</span>
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </Link>
+                <Link
+                  to="/track"
+                  className="px-6 py-3.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 text-[#F5F5F5] font-semibold text-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Search className="w-4 h-4 text-[#FFD60A]" />
+                  <span>Track existing inquiry</span>
+                </Link>
+              </div>
+
+              {/* Trust Badges Row */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="p-3 rounded-xl bg-white/[0.03] border border-white/10 flex items-center gap-2.5">
+                  <Clock className="w-4 h-4 text-[#FFD60A] shrink-0" />
+                  <span className="text-xs text-[#F5F5F5] font-medium">Guaranteed reply in 24h</span>
+                </div>
+                <div className="p-3 rounded-xl bg-white/[0.03] border border-white/10 flex items-center gap-2.5">
+                  <Layers className="w-4 h-4 text-[#60A5FA] shrink-0" />
+                  <span className="text-xs text-[#F5F5F5] font-medium">4 dedicated tracks</span>
+                </div>
+                <div className="p-3 rounded-xl bg-white/[0.03] border border-white/10 flex items-center gap-2.5">
+                  <ShieldCheck className="w-4 h-4 text-[#4ADE80] shrink-0" />
+                  <span className="text-xs text-[#F5F5F5] font-medium">Verified counselor response</span>
+                </div>
+              </div>
             </div>
 
-            {/* Trust Badges Row */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div className="p-3 rounded-xl bg-white/[0.03] border border-white/10 flex items-center gap-2.5">
-                <Clock className="w-4 h-4 text-[#FFD60A] shrink-0" />
-                <span className="text-xs text-[#F5F5F5] font-medium">Guaranteed reply in 24h</span>
-              </div>
-              <div className="p-3 rounded-xl bg-white/[0.03] border border-white/10 flex items-center gap-2.5">
-                <Layers className="w-4 h-4 text-[#60A5FA] shrink-0" />
-                <span className="text-xs text-[#F5F5F5] font-medium">4 dedicated tracks</span>
-              </div>
-              <div className="p-3 rounded-xl bg-white/[0.03] border border-white/10 flex items-center gap-2.5">
-                <ShieldCheck className="w-4 h-4 text-[#4ADE80] shrink-0" />
-                <span className="text-xs text-[#F5F5F5] font-medium">Verified counselor response</span>
-              </div>
+            {/* Right Orb Column (Glowing Yellow Orb) */}
+            <div className="hidden lg:flex lg:col-span-5 justify-center items-center relative py-6">
+              <GlowingYellowOrb size={460} />
             </div>
           </div>
         </section>

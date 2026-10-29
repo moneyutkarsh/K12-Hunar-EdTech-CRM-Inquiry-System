@@ -45,11 +45,11 @@
 |---|---|---|---|---|
 | **V0** | Baseline | Checks, screenshots directory setup, log initialization | Completed | `d020c48` |
 | **V1** | P1 | Home Page + Ghost Fibers (WebGL + CSS fallback), route & background map, form prefill | Completed | `804cda7` |
-| **V2** | N1 | Public Inquiry Tracker (`/track`), `reference_code` DB & migration, public stats API | Completed | Pending |
-| **V3** | N2 + N3 | Priority & Assignee workflow, duplicate/related contacts detection | Pending | Pending |
-| **V4** | N4 | Settings Page (`/admin/settings`), JWT `token_version` revocation, password change | Pending | Pending |
-| **V5** | N5 | Activity Feed (`/admin/activity`), audit log cursor timeline & filter chips | Pending | Pending |
-| **V6** | N6 | Stretch goals (Hindi toggle, weekly summary, etc.) | Pending | Pending |
+| **V2** | N1 | Public Inquiry Tracker (`/track`), `reference_code` DB & migration, public stats API | Completed | `748f427` |
+| **V3** | N2 + N3 | Priority & Assignee workflow, duplicate/related contacts detection | Completed | `1593cfa` |
+| **V4** | N4 | Settings Page (`/admin/settings`), JWT `token_version` revocation, password change | Completed | `77fff8b` |
+| **V5** | N5 | Activity Feed (`/admin/activity`), audit log cursor timeline & filter chips | Completed | `71e682a` |
+| **V6** | N6 | Documentation, OpenAPI specification, and full verification suite | Completed | Pending |
 
 ### V1 Deliverables Summary:
 - **Home Page (`/`)**: Comprehensive public landing experience with sticky glass navbar, word-by-word reveal Space Grotesk headline, Services cards (`#services`), Stakeholders section (`#who`), 3-step process (`#how-it-works`), live public stats trust strip, accessible FAQ accordion with JSON-LD schema, and CTA band with footer.
@@ -69,12 +69,39 @@
 - **Success Panel**: Displays highlighted reference code box, one-click clipboard copy button with toast, and direct "Track Inquiry" button.
 - **Tracker Endpoint (`POST /api/track`)**: Strict rate-limited (10 req/15 min/IP). Matches uppercase reference and lowercase email. Zero PII or internal IDs leaked. Returns sanitized timeline from activity logs.
 - **Tracker Page (`/track`)**: Interactive lookup form with auto-fill via `?ref=...`, visual 3-step pipeline (`Received` -> `In review` -> `Resolved`) with status badges and timeline history.
-- **Integration Tests**: 38/38 passing test suite including full tracking scenarios.
-  - `/admin/login`: AdminLoginPage + `AppBackground` (AeroShards)
-  - `/admin`, `/admin/activity`, `/admin/settings`: Admin dashboard + `GridScanBackground`
-  - Redirects: `/submit` -> `/inquiry`, `/home` -> `/`
-  - Exactly one WebGL background canvas mounted at any time.
-- **Form Prefill**: Updated `PublicInquiryPage.tsx` to read optional `?category=` and `?userType=` query parameters with validation fallback.
 - **Public Stats API**: Created `GET /api/public/stats` with 60-second in-memory cache and rate limiting.
+
+### V3 Deliverables Summary (Priority, Assignee & Duplicate Contacts):
+- **Priority Levels**: Added `priority` column (`Low`, `Normal`, `High`, `Urgent`, default `Normal`) with check constraint and index. Added `PATCH /api/inquiries/:id/priority`.
+- **Assignee Workflow**: Added `assigned_to UUID REFERENCES admins(id)`. Added `PATCH /api/inquiries/:id/assign` and `GET /api/admins/options`.
+- **Duplicate & Repeat Contact Detection**: Inquiries query now includes `contact_count` subquery. Drawer loads up to 5 related inquiries by matching email or phone. UI shows `×N` badge on repeat contact rows and cards.
+- **Multi-Admin Seed**: CLI flags for `seedAdmin.js` (`--email`, `--password`, `--name`). Seeded Priya Sharma and Rahul Mehta alongside Lead Admin.
+- **UI Enhancements**: Inquiry Table and Board cards render priority badges, repeat contact chips, and assignee avatars. Drawer includes priority buttons, assignee dropdown, and clickable related inquiry list.
+
+### V4 Deliverables Summary (Settings & Session Revocation):
+- **Session Revocation**: Added `token_version INT NOT NULL DEFAULT 1` to `admins`. JWT tokens include `tv` claim. Auth middleware verifies token version against DB; mismatched tokens return 401 `REVOKED_TOKEN`.
+- **Password Policy & Endpoints**:
+  - `PATCH /api/auth/password`: Validates current password, enforces complexity rules (min 8 chars, uppercase, lowercase, number, symbol), updates password hash, and increments `token_version` to invalidate all other sessions.
+  - `POST /api/auth/logout-all`: Increments `token_version` to terminate all active logins across devices.
+  - `GET /api/auth/me`: Returns profile with name, email, role, and security `tokenVersion`.
+- **Admin Settings Page (`/admin/settings`)**:
+  - Profile tab: Avatar, name, role badge, copyable email, security version indicator.
+  - Security tab: Change password form with real-time complexity checklist, and emergency "Revoke All Active Sessions" confirmation modal.
+  - UI Preferences tab: Toggles for GridScan background, sound feedback, and compact table density.
+
+### V5 Deliverables Summary (Activity Feed):
+- **Activity API (`GET /api/activity`)**: Protected endpoint supporting cursor-based pagination (`nextCursor`, `hasMore`, `limit=1..100`), action filtering (`status`, `priority`, `assigned`, `notes`), and inquiry filtering.
+- **Activity Feed Page (`/admin/activity`)**:
+  - Filter chips bar: All Activities, Status Changes, Priority Updates, Lead Assignments, Internal Notes.
+  - Chronological grouping: Today, Yesterday, Earlier this week, Older.
+  - Action-specific glass icon badges and human-readable event statements.
+  - Inquiry reference pill with direct inspection navigation to `/admin?drawer=<id>`.
+  - Cursor-based "Load More Activities" button.
+
+### V6 Deliverables Summary (Documentation & Verification):
+- **OpenAPI 3.0 Documentation**: Complete coverage for all 8 new/updated endpoints in `backend/src/docs/openapi.js`.
+- **Test Suite**: 52/52 backend tests passing (unit + integration suites).
+- **Frontend Production Build**: Zero TypeScript errors (`tsc -b; vite build` passing with optimized chunks).
+
 
 
