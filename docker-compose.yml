@@ -1,0 +1,39 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: k12_crm_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: k12_hunar_crm
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespassword
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./backend/schema.sql:/docker-entrypoint-initdb.d/init.sql
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: k12_crm_backend
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      PORT: 5000
+      NODE_ENV: development
+      DATABASE_URL: postgresql://postgres:postgrespassword@postgres:5432/k12_hunar_crm
+      JWT_SECRET: local_docker_compose_super_secret_jwt_key_minimum_32_chars
+      JWT_EXPIRES_IN: 8h
+      JWT_ISSUER: k12-crm
+      JWT_AUDIENCE: k12-crm-admin
+      CLIENT_URL: http://localhost:5173
+      ADMIN_EMAIL: admin@k12hunar.com
+      ADMIN_PASSWORD: Admin@12345
+    depends_on:
+      - postgres
+
+volumes:
+  pgdata:

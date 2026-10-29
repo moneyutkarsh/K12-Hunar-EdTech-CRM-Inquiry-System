@@ -1,6 +1,14 @@
-# K12 Hunar CRM & Inquiry System
+# K12 Hunar CRM & Inquiry System (Advanced Edition)
 
-A full-stack, production-grade EdTech Customer Relationship Management (CRM) and Inquiry Management System built with **React, Vite, TypeScript, Tailwind CSS, shadcn/ui**, and a **Node.js/Express** backend with custom JWT authentication and **Supabase PostgreSQL** (`pg` library with parameterized queries).
+[![CI Build & Test](https://github.com/utkarshdubey/k12-hunar-crm/actions/workflows/ci.yml/badge.svg)](https://github.com/utkarshdubey/k12-hunar-crm/actions)
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+![Node: 20+](https://img.shields.io/badge/Node-20%2B-green.svg)
+![Database: Supabase PostgreSQL](https://img.shields.io/badge/Database-Supabase%20Postgres-3ECF8E.svg)
+
+A full-stack, production-grade EdTech Customer Relationship Management (CRM) and Inquiry System built with **React 18/19, Vite, TypeScript, Tailwind CSS, shadcn/ui**, and an **Express.js (Node 20+)** backend with custom timing-safe JWT authentication and **Supabase PostgreSQL** accessed strictly as plain relational Postgres via `pg.Pool` on port 6543.
+
+- 📚 **Interactive Swagger API Documentation**: `http://localhost:5000/api/docs` (or deployed at `/api/docs`)
+- 🧪 **Test Suite**: 30 Vitest unit and integration tests (100% green)
 
 ---
 
@@ -14,9 +22,10 @@ A full-stack, production-grade EdTech Customer Relationship Management (CRM) and
 7. [Local Environment Setup](#local-environment-setup)
 8. [Database Setup & Seeding](#database-setup--seeding)
 9. [How to Test the Custom JWT Auth (Ready-to-Paste cURL Commands)](#how-to-test-the-custom-jwt-auth)
-10. [API Reference](#api-reference)
+10. [API Reference & OpenAPI 3](#api-reference)
 11. [Deployment Guide (Render & Vercel)](#deployment-guide-render--vercel)
 12. [Security & Production Hardening](#security--production-hardening)
+13. [Architecture Decisions (ADR)](#architecture-decisions-adr)
 
 ---
 
@@ -259,13 +268,32 @@ curl -X PATCH http://localhost:5000/api/inquiries/<INQUIRY_UUID>/status \
 | Method | Endpoint | Auth | Description |
 |---|---|---|---|
 | `GET` | `/api/health` | Public | Server health check (Render warm-up) |
+| `GET` | `/api/docs` | Public | Interactive OpenAPI 3 / Swagger documentation UI |
 | `POST` | `/api/inquiries` | Public (Rate Limited) | Submit an inquiry (Zod validated, honeypot protected) |
 | `POST` | `/api/auth/login` | Public (5 req/15m) | Admin login (constant-time bcrypt check, returns JWT) |
 | `GET` | `/api/auth/me` | Protected | Returns authenticated admin profile |
-| `GET` | `/api/inquiries` | Protected | Paginated inquiries with filters, search, and sorting |
+| `GET` | `/api/inquiries` | Protected | Paginated inquiries with server filters, search, and sorting |
 | `GET` | `/api/inquiries/stats` | Protected | Inquiries count by status (Total, New, In Progress, Resolved) |
+| `GET` | `/api/inquiries/analytics` | Protected | 30-day zero-filled volume timeseries and category distribution |
 | `GET` | `/api/inquiries/export`| Protected | Export filtered inquiries as sanitized CSV |
-| `PATCH`| `/api/inquiries/:id/status` | Protected | Update status (`New`, `In Progress`, `Resolved`) |
+| `GET` | `/api/inquiries/:id` | Protected | Complete inquiry details with notes and audit timeline |
+| `PATCH`| `/api/inquiries/:id/status` | Protected | Update status (`New`, `In Progress`, `Resolved`) with audit log |
+| `GET` | `/api/inquiries/:id/notes` | Protected | Retrieve reverse-chronological notes for an inquiry |
+| `POST` | `/api/inquiries/:id/notes` | Protected | Add an internal admin note with audit trail log |
+
+---
+
+## Architecture Decisions (ADR)
+
+Detailed engineering decision records are maintained in `/docs`:
+- [ADR-001: Supabase Session Pooler (Port 6543)](file:///c:/Users/Utkarsh%20Dubey/.gemini/antigravity/EdTech%20CRM%20&%20Inquiry%20System/docs/ADR/ADR-001-supabase-pooler.md)
+- [ADR-002: JWT Bearer Tokens vs Cookies](file:///c:/Users/Utkarsh%20Dubey/.gemini/antigravity/EdTech%20CRM%20&%20Inquiry%20System/docs/ADR/ADR-002-jwt-vs-cookies.md)
+- [ADR-003: Timing-Safe Auth & Brute-Force Lockout](file:///c:/Users/Utkarsh%20Dubey/.gemini/antigravity/EdTech%20CRM%20&%20Inquiry%20System/docs/ADR/ADR-003-timing-safe-auth.md)
+- [ADR-004: Server-Side Filtering, Search & Window Pagination](file:///c:/Users/Utkarsh%20Dubey/.gemini/antigravity/EdTech%20CRM%20&%20Inquiry%20System/docs/ADR/ADR-004-server-side-filtering.md)
+- [ADR-005: AeroShards WebGL Background & Fallback](file:///c:/Users/Utkarsh%20Dubey/.gemini/antigravity/EdTech%20CRM%20&%20Inquiry%20System/docs/ADR/ADR-005-webgl-background-fallback.md)
+- [Database ER Diagram](file:///c:/Users/Utkarsh%20Dubey/.gemini/antigravity/EdTech%20CRM%20&%20Inquiry%20System/docs/ER-DIAGRAM.md)
+- [System Architecture & Sequence Flows](file:///c:/Users/Utkarsh%20Dubey/.gemini/antigravity/EdTech%20CRM%20&%20Inquiry%20System/docs/ARCHITECTURE.md)
+- [Production Deployment Checklist](file:///c:/Users/Utkarsh%20Dubey/.gemini/antigravity/EdTech%20CRM%20&%20Inquiry%20System/docs/DEPLOY-CHECKLIST.md)
 
 ---
 
