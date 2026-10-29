@@ -6,10 +6,17 @@ export const inquiryQuerySchema = z.object({
   category: z.string().trim().optional(),
   userType: z.string().trim().optional(),
   status: z.string().trim().optional(),
-  search: z.string().trim().min(2, 'Search query must be at least 2 characters').max(60).optional(),
+  search: z.string().trim().max(100).optional(),
   from: z.string().datetime({ offset: true }).optional().or(z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional()),
   to: z.string().datetime({ offset: true }).optional().or(z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional()),
-  sort: z.enum(['createdAt', 'name', 'status', 'category', 'userType']).default('createdAt'),
+  sort: z
+    .enum(['createdAt', 'created_at', 'name', 'status', 'category', 'userType', 'user_type'])
+    .default('createdAt')
+    .transform((val) => {
+      if (val === 'created_at') return 'createdAt';
+      if (val === 'user_type') return 'userType';
+      return val;
+    }),
   order: z.enum(['asc', 'desc', 'ASC', 'DESC']).default('desc'),
 });
 

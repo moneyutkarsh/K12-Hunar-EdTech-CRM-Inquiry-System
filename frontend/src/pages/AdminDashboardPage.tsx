@@ -132,18 +132,21 @@ export const AdminDashboardPage: React.FC = () => {
       const params: Record<string, string | number> = {
         page: currentPage,
         limit: 10,
-        sort: 'created_at',
+        sort: 'createdAt',
         order: sortOrder,
       };
 
       if (categoryFilter) params.category = categoryFilter;
       if (userTypeFilter) params.userType = userTypeFilter;
       if (statusFilter) params.status = statusFilter;
-      if (searchQuery) params.search = searchQuery;
+      if (searchQuery && searchQuery.trim().length >= 2) params.search = searchQuery.trim();
 
       const res = await api.get('/inquiries', { params });
-      setInquiries(res.data.data);
-      setPagination(res.data.pagination);
+      const items = res.data.data || res.data;
+      setInquiries(Array.isArray(items) ? items : []);
+      if (res.data.pagination) {
+        setPagination(res.data.pagination);
+      }
     } catch {
       setIsError(true);
       toast.error('Failed to load inquiries. Please try again.');
@@ -157,7 +160,19 @@ export const AdminDashboardPage: React.FC = () => {
     async (isPolling = false) => {
       try {
         const res = await api.get('/inquiries/stats');
-        const incoming = res.data;
+        const raw = res.data.data || res.data;
+        const total = Number(raw.total ?? 0);
+        const newCount = Number(raw.new ?? raw.byStatus?.New ?? 0);
+        const inProgress = Number(raw.inProgress ?? raw.byStatus?.InProgress ?? 0);
+        const resolved = Number(raw.resolved ?? raw.byStatus?.Resolved ?? 0);
+
+        const incoming: InquiryStats = {
+          total,
+          new: newCount,
+          inProgress,
+          resolved,
+        };
+
         if (
           isPolling &&
           previousTotalRef.current !== null &&
@@ -286,13 +301,13 @@ export const AdminDashboardPage: React.FC = () => {
     setIsExporting(true);
     try {
       const params: Record<string, string> = {
-        sort: 'created_at',
+        sort: 'createdAt',
         order: sortOrder,
       };
       if (categoryFilter) params.category = categoryFilter;
       if (userTypeFilter) params.userType = userTypeFilter;
       if (statusFilter) params.status = statusFilter;
-      if (searchQuery) params.search = searchQuery;
+      if (searchQuery && searchQuery.trim().length >= 2) params.search = searchQuery.trim();
 
       const res = await api.get('/inquiries/export', {
         params,

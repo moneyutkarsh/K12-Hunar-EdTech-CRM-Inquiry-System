@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { config } from '../config/env.js';
 import { HttpError } from '../utils/httpError.js';
-import { findAdminByEmail, updateAdminLastLogin } from '../repositories/admins.repo.js';
+import { findAdminByEmail, updateAdminLastLogin, upsertAdmin } from '../repositories/admins.repo.js';
 import { checkLockout, logAttempt } from './loginAttempts.service.js';
 
 // Precomputed bcrypt cost 12 dummy hash for constant-time comparisons
@@ -62,4 +62,44 @@ export async function loginAdmin({ email, password, clientIp }) {
   };
 }
 
-export default { loginAdmin };
+export async function registerAdmin({ email, password }) {
+  const normalizedEmail = email.toLowerCase().trim();
+  const existing = await findAdminByEmail(normalizedEmail);
+  if (existing) {
+    throw HttpError.badRequest('An admin account with this email already exists.');
+  }
+
+  const salt = await bcrypt.genSalt(10);
+  const passwordHash = await bcrypt.hash(password, salt);
+  const newAdmin = await upsertAdmin({ email: normalizedEmail, passwordHash, role: 'admin' });
+
+  const jti = crypto.randomUUID();
+  const payload = {
+    sub: newAdmin.id,
+    email: newAdmin.email,
+    role: newAdmin.role,
+    jti,
+  };
+
+  const token = jwt.sign(payload, config.JWT_SECRET, {
+    algorithm: 'HS256',
+    expiresIn: config.JWT_EXPIRES_IN,
+    issuer: config.JWT_ISSUER,
+    audience: config.JWT_AUDIENCE,
+  });
+
+  const decoded = jwt.decode(token);
+  const expiresAt = new Date(decoded.exp * 1000).toISOString();
+
+  return {
+    token,
+    expiresAt,
+    admin: {
+      id: newAdmin.id,
+      email: newAdmin.email,
+      role: newAdmin.role,
+    },
+  };
+}
+
+export default { loginAdmin, registerAdmin };

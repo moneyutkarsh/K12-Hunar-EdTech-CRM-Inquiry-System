@@ -20,8 +20,12 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [token, setToken] = useState<string | null>(() => localStorage.getItem('k12_auth_token'));
   const [admin, setAdmin] = useState<AdminUser | null>(() => {
-    const cached = localStorage.getItem('k12_admin_user');
-    return cached ? JSON.parse(cached) : null;
+    try {
+      const cached = localStorage.getItem('k12_admin_user');
+      return cached && cached !== 'undefined' ? JSON.parse(cached) : null;
+    } catch {
+      return null;
+    }
   });
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
@@ -33,6 +37,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = useCallback((newToken: string, newAdmin: AdminUser) => {
+    if (!newToken) return;
     localStorage.setItem('k12_auth_token', newToken);
     localStorage.setItem('k12_admin_user', JSON.stringify(newAdmin));
     setToken(newToken);
@@ -43,15 +48,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     let isMounted = true;
     const verifySession = async () => {
       const storedToken = localStorage.getItem('k12_auth_token');
-      if (!storedToken) {
+      if (!storedToken || storedToken === 'undefined') {
         if (isMounted) setIsLoading(false);
         return;
       }
 
       try {
         const res = await api.get('/auth/me');
-        if (isMounted && res.data?.admin) {
-          setAdmin(res.data.admin);
+        const adminData = res.data?.data?.admin || res.data?.admin;
+        if (isMounted && adminData) {
+          setAdmin(adminData);
           setToken(storedToken);
         }
       } catch {

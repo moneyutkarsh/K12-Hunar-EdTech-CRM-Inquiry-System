@@ -60,6 +60,7 @@ export async function getNotes(req, res) {
 export async function stats(req, res) {
   const data = await getStats();
   return res.status(200).json({
+    ...data,
     data,
   });
 }

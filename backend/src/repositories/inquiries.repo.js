@@ -3,10 +3,12 @@ import { escapeLikePattern } from '../utils/likeEscape.js';
 
 const SORT_WHITELIST = {
   createdAt: 'created_at',
+  created_at: 'created_at',
   name: 'name',
   status: 'status',
   category: 'category',
   userType: 'user_type',
+  user_type: 'user_type',
 };
 
 export async function findDuplicateWithinWindow(email, category, message, windowMinutes = 10) {
@@ -151,19 +153,22 @@ export async function listInquiries({
   const rows = result.rows;
   const total = rows.length > 0 ? parseInt(rows[0].total_count, 10) : 0;
 
-  // Map to clean camelCase DTOs
+  // Map to clean camelCase and snake_case DTOs for 100% frontend compatibility
   const data = rows.map((r) => ({
     id: r.id,
     name: r.name,
     email: r.email,
     phone: r.phone,
     userType: r.user_type,
+    user_type: r.user_type,
     category: r.category,
     status: r.status,
     message: r.message,
     messagePreview: r.message.length > 140 ? `${r.message.slice(0, 137)}...` : r.message,
     createdAt: r.created_at,
+    created_at: r.created_at,
     updatedAt: r.updated_at,
+    updated_at: r.updated_at,
   }));
 
   return { data, total };
@@ -186,11 +191,14 @@ export async function findInquiryById(id) {
     email: r.email,
     phone: r.phone,
     userType: r.user_type,
+    user_type: r.user_type,
     category: r.category,
     status: r.status,
     message: r.message,
     createdAt: r.created_at,
+    created_at: r.created_at,
     updatedAt: r.updated_at,
+    updated_at: r.updated_at,
   };
 }
 
@@ -211,10 +219,13 @@ export async function updateInquiryStatus(id, newStatus) {
     email: r.email,
     phone: r.phone,
     userType: r.user_type,
+    user_type: r.user_type,
     category: r.category,
     status: r.status,
     message: r.message,
     createdAt: r.created_at,
+    created_at: r.created_at,
     updatedAt: r.updated_at,
+    updated_at: r.updated_at,
   };
 }

@@ -14,12 +14,20 @@ export async function getStats() {
   const result = await query(sql);
   const row = result.rows[0] || {};
 
+  const newCount = parseInt(row.new_count || 0, 10);
+  const inProgressCount = parseInt(row.in_progress_count || 0, 10);
+  const resolvedCount = parseInt(row.resolved_count || 0, 10);
+  const totalCount = parseInt(row.total || 0, 10);
+
   return {
-    total: parseInt(row.total || 0, 10),
+    total: totalCount,
+    new: newCount,
+    inProgress: inProgressCount,
+    resolved: resolvedCount,
     byStatus: {
-      New: parseInt(row.new_count || 0, 10),
-      InProgress: parseInt(row.in_progress_count || 0, 10),
-      Resolved: parseInt(row.resolved_count || 0, 10),
+      New: newCount,
+      InProgress: inProgressCount,
+      Resolved: resolvedCount,
     },
     last24h: parseInt(row.last_24h || 0, 10),
     last7d: parseInt(row.last_7d || 0, 10),

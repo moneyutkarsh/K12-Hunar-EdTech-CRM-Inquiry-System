@@ -5,6 +5,7 @@ export type InquiryStatus = 'New' | 'In Progress' | 'Resolved';
 export interface Inquiry {
   id: string;
   user_type: UserType;
+  userType?: UserType;
   category: Category;
   name: string;
   email: string;
@@ -12,7 +13,9 @@ export interface Inquiry {
   message: string;
   status: InquiryStatus;
   created_at: string;
+  createdAt?: string;
   updated_at: string;
+  updatedAt?: string;
 }
 
 export interface InquiryStats {
