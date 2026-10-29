@@ -33,6 +33,68 @@ export const AdminLoginPage: React.FC = () => {
   const [isSsoLoading, setIsSsoLoading] = useState<boolean>(false);
   const [customSsoEmail, setCustomSsoEmail] = useState<string>('');
 
+  const googleClientId =
+    import.meta.env.VITE_GOOGLE_CLIENT_ID ||
+    '67154574226-7m4jepbit7ln3r67c9um7e5teuhsao2p.apps.googleusercontent.com';
+
+  // Initialize official Google Identity Services
+  React.useEffect(() => {
+    const initGoogleIdentity = () => {
+      const g = (window as any).google;
+      if (g?.accounts?.id) {
+        try {
+          g.accounts.id.initialize({
+            client_id: googleClientId,
+            callback: async (response: any) => {
+              if (response?.credential) {
+                setIsLoading(true);
+                try {
+                  const res = await api.post('/auth/oauth/google', {
+                    credential: response.credential,
+                  });
+                  const payload = res.data.data || res.data;
+                  login(payload.token, payload.admin);
+                  toast.success(
+                    `Signed in with Google as ${payload.admin.name || payload.admin.email}`
+                  );
+                  navigate('/admin', { replace: true });
+                } catch (err: any) {
+                  toast.error(err.response?.data?.error?.message || 'Google authentication failed');
+                } finally {
+                  setIsLoading(false);
+                }
+              }
+            },
+          });
+        } catch {
+          // ignore
+        }
+      }
+    };
+
+    initGoogleIdentity();
+    const timer = setTimeout(initGoogleIdentity, 1200);
+    return () => clearTimeout(timer);
+  }, [googleClientId, login, navigate]);
+
+  const triggerGoogleLogin = () => {
+    const g = (window as any).google;
+    if (g?.accounts?.id) {
+      try {
+        g.accounts.id.prompt((notification: any) => {
+          if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+            setSsoModal('google');
+          }
+        });
+        return;
+      } catch {
+        setSsoModal('google');
+      }
+    } else {
+      setSsoModal('google');
+    }
+  };
+
   const {
     register,
     handleSubmit,
@@ -178,7 +240,7 @@ export const AdminLoginPage: React.FC = () => {
           <div className="space-y-2.5 mb-5 relative z-10">
             <button
               type="button"
-              onClick={() => setSsoModal('google')}
+              onClick={triggerGoogleLogin}
               className="w-full py-2.5 px-4 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] active:bg-white/[0.02] border border-white/10 text-xs font-semibold text-[#F5F5F5] transition-all flex items-center justify-center gap-2.5 cursor-pointer shadow-sm group"
             >
               <svg className="w-4 h-4 shrink-0 group-hover:scale-105 transition-transform" viewBox="0 0 24 24">
