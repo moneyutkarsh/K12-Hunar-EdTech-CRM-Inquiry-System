@@ -96,3 +96,19 @@ export async function listAdminOptions() {
   }));
 }
 
+export async function upsertOAuthAdmin({ email, name, avatarUrl, provider = 'google' }) {
+  const sql = `
+    INSERT INTO admins (email, name, avatar_url, role, is_active, token_version, last_login_at)
+    VALUES (LOWER($1), $2, $3, 'admin', true, 1, NOW())
+    ON CONFLICT (email)
+    DO UPDATE SET
+      name = COALESCE(admins.name, EXCLUDED.name),
+      avatar_url = COALESCE(admins.avatar_url, EXCLUDED.avatar_url),
+      last_login_at = NOW(),
+      is_active = true
+    RETURNING id, name, email, role, avatar_url, token_version;
+  `;
+  const result = await query(sql, [email.toLowerCase().trim(), name || null, avatarUrl || null]);
+  return result.rows[0];
+}
+

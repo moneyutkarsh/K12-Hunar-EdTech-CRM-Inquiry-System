@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { login, signup, getMe, changePassword, logoutAll } from '../controllers/auth.controller.js';
+import { login, signup, getMe, changePassword, logoutAll, oauthGoogle, oauthMicrosoft } from '../controllers/auth.controller.js';
 import { loginSchema, changePasswordSchema } from '../validators/auth.schema.js';
 import { validate } from '../middleware/validate.js';
 import { auth } from '../middleware/auth.js';
@@ -10,6 +10,10 @@ const router = Router();
 
 // Public: Admin login with strict rate limiter and lockout defense
 router.post('/login', loginLimiter, validate(loginSchema), asyncHandler(login));
+
+// Public: OAuth Sign-In (Google & Microsoft)
+router.post('/oauth/google', loginLimiter, asyncHandler(oauthGoogle));
+router.post('/oauth/microsoft', loginLimiter, asyncHandler(oauthMicrosoft));
 
 // Public: Admin signup/registration
 router.post('/signup', validate(loginSchema), asyncHandler(signup));

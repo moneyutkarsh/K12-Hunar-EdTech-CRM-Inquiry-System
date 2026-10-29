@@ -118,6 +118,57 @@ export const openapiSpec = {
         },
       },
     },
+    '/auth/oauth/google': {
+      post: {
+        summary: 'Google OAuth SSO Sign-In',
+        tags: ['Authentication'],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['email'],
+                properties: {
+                  email: { type: 'string', format: 'email', example: 'moneyutkarsh@gmail.com' },
+                  name: { type: 'string', example: 'Utkarsh' },
+                  credential: { type: 'string', description: 'Google ID token JWT' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          '200': { description: 'Google SSO authentication successful with JWT returned' },
+          '400': { description: 'Missing Google email' },
+        },
+      },
+    },
+    '/auth/oauth/microsoft': {
+      post: {
+        summary: 'Microsoft 365 OAuth SSO Sign-In',
+        tags: ['Authentication'],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['email'],
+                properties: {
+                  email: { type: 'string', format: 'email', example: 'counselor@k12hunar.com' },
+                  name: { type: 'string', example: 'Priya Sharma' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          '200': { description: 'Microsoft 365 SSO authentication successful with JWT returned' },
+          '400': { description: 'Missing Microsoft email' },
+        },
+      },
+    },
     '/inquiries': {
       post: {
         summary: 'Public Inquiry Submission',

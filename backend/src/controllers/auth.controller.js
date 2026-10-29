@@ -3,6 +3,7 @@ import {
   registerAdmin,
   changeAdminPassword,
   logoutAllSessions,
+  authenticateOAuth,
 } from '../services/auth.service.js';
 
 export async function login(req, res) {
@@ -66,5 +67,73 @@ export async function logoutAll(req, res) {
   return res.status(200).json(result);
 }
 
-export default { login, signup, getMe, changePassword, logoutAll };
+export async function oauthGoogle(req, res) {
+  const { credential, email, name, avatarUrl } = req.body;
+  let resolvedEmail = email;
+  let resolvedName = name;
+  let resolvedAvatar = avatarUrl;
+
+  if (credential && credential.includes('.')) {
+    try {
+      const parts = credential.split('.');
+      if (parts.length === 3) {
+        const payloadJson = Buffer.from(parts[1], 'base64').toString('utf-8');
+        const parsed = JSON.parse(payloadJson);
+        if (parsed.email) {
+          resolvedEmail = parsed.email;
+          resolvedName = parsed.name || resolvedName;
+          resolvedAvatar = parsed.picture || resolvedAvatar;
+        }
+      }
+    } catch {
+      // fallback
+    }
+  }
+
+  if (!resolvedEmail) {
+    return res.status(400).json({ error: { message: 'Google account email is required' } });
+  }
+
+  const result = await authenticateOAuth({
+    provider: 'google',
+    email: resolvedEmail,
+    name: resolvedName,
+    avatarUrl: resolvedAvatar,
+    clientIp: req.ip,
+  });
+
+  return res.status(200).json({
+    message: 'Google authentication successful',
+    token: result.token,
+    expiresAt: result.expiresAt,
+    admin: result.admin,
+    data: result,
+  });
+}
+
+export async function oauthMicrosoft(req, res) {
+  const { email, name, avatarUrl } = req.body;
+  if (!email) {
+    return res.status(400).json({ error: { message: 'Microsoft 365 account email is required' } });
+  }
+
+  const result = await authenticateOAuth({
+    provider: 'microsoft',
+    email,
+    name: name || email.split('@')[0],
+    avatarUrl: avatarUrl || null,
+    clientIp: req.ip,
+  });
+
+  return res.status(200).json({
+    message: 'Microsoft 365 authentication successful',
+    token: result.token,
+    expiresAt: result.expiresAt,
+    admin: result.admin,
+    data: result,
+  });
+}
+
+export default { login, signup, getMe, changePassword, logoutAll, oauthGoogle, oauthMicrosoft };
+
 

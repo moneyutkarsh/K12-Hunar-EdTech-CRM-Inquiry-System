@@ -10,6 +10,7 @@ import {
   findAdminWithPasswordById,
   updateAdminPassword,
   incrementAdminTokenVersion,
+  upsertOAuthAdmin,
 } from '../repositories/admins.repo.js';
 import { checkLockout, logAttempt } from './loginAttempts.service.js';
 
@@ -173,5 +174,55 @@ export async function logoutAllSessions(adminId) {
   };
 }
 
-export default { loginAdmin, registerAdmin, changeAdminPassword, logoutAllSessions };
+export async function authenticateOAuth({ provider, email, name, avatarUrl, clientIp }) {
+  const normalizedEmail = email.toLowerCase().trim();
+  const ipHash = clientIp ? crypto.createHash('sha256').update(clientIp).digest('hex') : null;
+
+  // Find or provision admin
+  let admin = await findAdminByEmail(normalizedEmail);
+  if (!admin) {
+    admin = await upsertOAuthAdmin({ email: normalizedEmail, name, avatarUrl, provider });
+  } else {
+    if (!admin.is_active) {
+      throw HttpError.forbidden('Your administrator account has been deactivated.');
+    }
+    await updateAdminLastLogin(admin.id);
+  }
+
+  await logAttempt(normalizedEmail, ipHash, true);
+
+  const jti = crypto.randomUUID();
+  const payload = {
+    sub: admin.id,
+    email: admin.email,
+    role: admin.role,
+    tv: admin.token_version || 1,
+    jti,
+  };
+
+  const token = jwt.sign(payload, config.JWT_SECRET, {
+    algorithm: 'HS256',
+    expiresIn: config.JWT_EXPIRES_IN,
+    issuer: config.JWT_ISSUER,
+    audience: config.JWT_AUDIENCE,
+  });
+
+  const decoded = jwt.decode(token);
+  const expiresAt = new Date(decoded.exp * 1000).toISOString();
+
+  return {
+    token,
+    expiresAt,
+    admin: {
+      id: admin.id,
+      name: admin.name || name || admin.email.split('@')[0],
+      email: admin.email,
+      role: admin.role,
+      avatarUrl: admin.avatar_url || avatarUrl || null,
+      tokenVersion: admin.token_version || 1,
+    },
+  };
+}
+
+export default { loginAdmin, registerAdmin, changeAdminPassword, logoutAllSessions, authenticateOAuth };
 
