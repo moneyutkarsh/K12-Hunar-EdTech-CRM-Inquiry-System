@@ -1,0 +1,116 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@layer base {
+  :root, .dark {
+    --bg-base: #050505;
+    --surface: #0F0F0F;
+    --surface-elevated: #171717;
+    --border-color: #262626;
+    --border-subtle: rgba(255, 255, 255, 0.08);
+
+    --primary-yellow: #FFD60A;
+    --primary-yellow-hover: #FFE14D;
+    --primary-yellow-pressed: #E6BF00;
+    --text-on-yellow: #0A0A0A;
+
+    --text-main: #F5F5F5;
+    --text-muted: #A3A3A3;
+
+    --status-new: #FFD60A;
+    --status-in-progress: #FB923C;
+    --status-resolved: #4ADE80;
+    --status-error: #F87171;
+
+    /* Shadcn variables aligned to Black & Yellow Dark Theme */
+    --background: #050505;
+    --foreground: #F5F5F5;
+    --card: #0F0F0F;
+    --card-foreground: #F5F5F5;
+    --popover: #171717;
+    --popover-foreground: #F5F5F5;
+    --primary: #FFD60A;
+    --primary-foreground: #0A0A0A;
+    --secondary: #171717;
+    --secondary-foreground: #F5F5F5;
+    --muted: #171717;
+    --muted-foreground: #A3A3A3;
+    --accent: #262626;
+    --accent-foreground: #FFD60A;
+    --destructive: #F87171;
+    --border: #262626;
+    --input: #141414;
+    --ring: #FFD60A;
+  }
+
+  * {
+    border-color: var(--border-color);
+  }
+
+  body {
+    background-color: var(--bg-base);
+    color: var(--text-main);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+}
+
+/* Glassmorphism card styling */
+.glass-card {
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1rem;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-card:hover {
+  border-color: rgba(255, 214, 10, 0.25);
+  box-shadow: 0 8px 32px -8px rgba(255, 214, 10, 0.08);
+}
+
+/* Yellow Glow effects */
+.glow-yellow-sm {
+  box-shadow: 0 0 16px -2px rgba(255, 214, 10, 0.25);
+}
+
+.glow-yellow-md {
+  box-shadow: 0 0 24px -2px rgba(255, 214, 10, 0.35);
+}
+
+/* Dark Input Styling */
+.dark-input {
+  background-color: #141414;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #F5F5F5;
+  border-radius: 0.75rem;
+  transition: all 0.15s ease-in-out;
+}
+
+.dark-input:focus {
+  outline: none;
+  border-color: #FFD60A;
+  box-shadow: 0 0 0 2px rgba(255, 214, 10, 0.3);
+}
+
+/* Custom Scrollbar for dense tables */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0A0A0A;
+}
+::-webkit-scrollbar-thumb {
+  background: #262626;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #FFD60A;
+}
