@@ -231,6 +231,7 @@ export const openapiSpec = {
           '201': { description: 'Note added and activity logged' },
         },
       },
+    },
     '/inquiries/{id}/priority': {
       patch: {
         summary: 'Update Inquiry Priority',

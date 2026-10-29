@@ -151,6 +151,37 @@ export const PublicTrackerPage: React.FC = () => {
             </button>
           </form>
 
+          {/* 1-click sample tracker shortcuts */}
+          {!result && (
+            <div className="mt-6 pt-4 border-t border-white/5 text-center text-[11px] text-[#A3A3A3]">
+              <p className="text-white/60 mb-1.5">Click to autofill sample inquiries:</p>
+              <div className="flex flex-col gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setReference('KH-ES2XFRZV');
+                    setEmail('rohan.mehra@outlook.com');
+                    setError(null);
+                  }}
+                  className="font-mono text-xs text-[#FFD60A] hover:underline cursor-pointer transition-colors"
+                >
+                  KH-ES2XFRZV / rohan.mehra@outlook.com <span className="text-[#A3A3A3] font-sans text-[10px]">(Scholarship)</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setReference('KH-WNMT8WWC');
+                    setEmail('aditya.v@gmail.com');
+                    setError(null);
+                  }}
+                  className="font-mono text-xs text-[#60A5FA] hover:underline cursor-pointer transition-colors"
+                >
+                  KH-WNMT8WWC / aditya.v@gmail.com <span className="text-[#A3A3A3] font-sans text-[10px]">(Admission)</span>
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Result view */}
           {result && (
             <div

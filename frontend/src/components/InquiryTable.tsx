@@ -650,8 +650,8 @@ export const InquiryTable: React.FC<InquiryTableProps> = ({
                     {/* Row Quick Actions: Copy, Call, WhatsApp, Email, View */}
                     <td className={`${rowPadding} text-right`} onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center justify-end gap-1">
-                        {/* Hover Quick Action Buttons */}
-                        <div className="hidden group-hover:flex items-center gap-0.5 animate-fadeIn">
+                        {/* Permanent Quick Action Buttons (Copy, Call, WhatsApp, Email) */}
+                        <div className="flex items-center gap-0.5">
                           {/* Copy Email */}
                           <button
                             type="button"

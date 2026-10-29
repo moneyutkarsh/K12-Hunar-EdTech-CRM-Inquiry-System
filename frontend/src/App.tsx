@@ -4,7 +4,7 @@ import { Toaster } from 'sonner';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import AppBackground from './components/AppBackground';
 import GridScanBackground from './components/layout/GridScanBackground';
-import GhostFibersBackground from './components/layout/GhostFibersBackground';
+import WebThreadsBackground from './components/layout/WebThreadsBackground';
 import Navbar from './components/Navbar';
 import ServerWakeBanner from './components/ServerWakeBanner';
 import HomePage from './pages/HomePage';
@@ -47,9 +47,9 @@ const AppLayout: React.FC = () => {
 
   return (
     <div className="relative min-h-screen text-[#F5F5F5] flex flex-col font-sans selection:bg-[#FFD60A] selection:text-[#0A0A0A] bg-[#050505]">
-      {/* Background layer: GhostFibers on Home (/), GridScan on /admin, AeroShards on /inquiry, /track, /admin/login */}
+      {/* Background layer: WebThreads on Home (/), GridScan on /admin, AeroShards on /inquiry, /track, /admin/login */}
       {isHome ? (
-        <GhostFibersBackground />
+        <WebThreadsBackground />
       ) : isDashboard ? (
         <GridScanBackground />
       ) : (
