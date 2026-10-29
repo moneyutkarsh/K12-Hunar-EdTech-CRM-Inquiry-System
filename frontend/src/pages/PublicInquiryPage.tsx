@@ -88,11 +88,14 @@ export const PublicInquiryPage: React.FC = () => {
       formattedPhone = `${countryCode} ${trimmedPhone}`;
     }
 
+    const { honeypot, ...cleanData } = data;
+
     setIsSubmitting(true);
     try {
       await api.post('/inquiries', {
-        ...data,
+        ...cleanData,
         phone: formattedPhone,
+        ...(honeypot ? { website: honeypot } : {}),
       });
       setIsSuccess(true);
       toast.success("Thank you! Your inquiry was submitted successfully.");

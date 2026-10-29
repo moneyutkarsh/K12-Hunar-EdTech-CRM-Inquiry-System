@@ -36,6 +36,7 @@ export const createInquirySchema = z
       .min(10, 'Message must be at least 10 characters')
       .max(1000, 'Message must not exceed 1000 characters'),
     website: z.string().optional(), // Honeypot field
+    honeypot: z.string().optional(), // Honeypot alias
   })
   .strict();
 

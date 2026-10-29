@@ -20,10 +20,12 @@ export async function submitPublicInquiry({
   phone,
   message,
   website, // honeypot
+  honeypot,
   clientIp,
 }) {
   // 1. Bot Honeypot Defense: if filled, return benign fake 201 without saving
-  if (website && website.trim().length > 0) {
+  const botTrap = website || honeypot;
+  if (botTrap && botTrap.trim().length > 0) {
     return {
       isBot: true,
       data: {
