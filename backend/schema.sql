@@ -114,3 +114,35 @@ CREATE TRIGGER trigger_inquiries_updated_at
 BEFORE UPDATE ON inquiries
 FOR EACH ROW
 EXECUTE FUNCTION set_updated_at();
+
+-- ==============================================================================
+-- 9. V2 ADDITIONS (Backward-compatible additive upgrades)
+-- ==============================================================================
+
+-- N1.1 Reference Code for Public Inquiry Tracking
+ALTER TABLE inquiries ADD COLUMN IF NOT EXISTS reference_code TEXT;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_inquiries_reference_code ON inquiries (reference_code);
+CREATE INDEX IF NOT EXISTS idx_inquiries_email_lower ON inquiries (LOWER(email));
+
+-- N2.1 Priority & Assignment
+ALTER TABLE inquiries ADD COLUMN IF NOT EXISTS priority TEXT NOT NULL DEFAULT 'Normal';
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'inquiries_priority_check'
+    ) THEN
+        ALTER TABLE inquiries ADD CONSTRAINT inquiries_priority_check 
+            CHECK (priority IN ('Low', 'Normal', 'High', 'Urgent'));
+    END IF;
+END $$;
+
+ALTER TABLE inquiries ADD COLUMN IF NOT EXISTS assigned_to UUID REFERENCES admins(id) ON DELETE SET NULL;
+CREATE INDEX IF NOT EXISTS idx_inquiries_priority ON inquiries (priority);
+CREATE INDEX IF NOT EXISTS idx_inquiries_assigned_to ON inquiries (assigned_to);
+
+-- N4.1 Session Security Token Version
+ALTER TABLE admins ADD COLUMN IF NOT EXISTS token_version INT NOT NULL DEFAULT 0;
+
+-- N5 Composite Activity Log index for fast cursor pagination
+CREATE INDEX IF NOT EXISTS idx_activity_log_cursor ON activity_log (created_at DESC, id);
+

@@ -30,6 +30,7 @@ export async function submitPublicInquiry({
       isBot: true,
       data: {
         id: crypto.randomUUID(),
+        referenceCode: 'KH-88888888',
         createdAt: new Date().toISOString(),
       },
       message: 'Thank you for your inquiry. Our team will review your submission soon.',
@@ -49,6 +50,7 @@ export async function submitPublicInquiry({
       isDuplicate: true,
       data: {
         id: duplicate.id,
+        referenceCode: duplicate.reference_code,
         createdAt: duplicate.created_at,
       },
       message: 'Thank you! Your inquiry was already received and is in our processing queue.',
@@ -79,6 +81,7 @@ export async function submitPublicInquiry({
     isSuccess: true,
     data: {
       id: row.id,
+      referenceCode: row.reference_code,
       createdAt: row.created_at,
     },
     message: 'Thank you! Your inquiry has been received. Our team will get back to you soon.',

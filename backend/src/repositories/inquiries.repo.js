@@ -1,5 +1,6 @@
 import { query } from '../config/db.js';
 import { escapeLikePattern } from '../utils/likeEscape.js';
+import { generateReferenceCode } from '../utils/referenceCode.js';
 
 const SORT_WHITELIST = {
   createdAt: 'created_at',
@@ -13,7 +14,7 @@ const SORT_WHITELIST = {
 
 export async function findDuplicateWithinWindow(email, category, message, windowMinutes = 10) {
   const sql = `
-    SELECT id, created_at
+    SELECT id, reference_code, created_at
     FROM inquiries
     WHERE LOWER(email) = LOWER($1)
       AND category = $2
@@ -31,13 +32,25 @@ export async function findDuplicateWithinWindow(email, category, message, window
 }
 
 export async function createInquiryRow({ userType, category, name, email, phone, message, sourceIpHash }) {
-  const sql = `
-    INSERT INTO inquiries (user_type, category, name, email, phone, message, status, source_ip_hash, created_at, updated_at)
-    VALUES ($1, $2, $3, LOWER($4), $5, $6, 'New', $7, NOW(), NOW())
-    RETURNING id, created_at
-  `;
-  const result = await query(sql, [userType, category, name.trim(), email.trim(), phone, message.trim(), sourceIpHash]);
-  return result.rows[0];
+  let attempts = 0;
+  while (attempts < 5) {
+    attempts++;
+    const referenceCode = generateReferenceCode();
+    const sql = `
+      INSERT INTO inquiries (user_type, category, name, email, phone, message, status, source_ip_hash, reference_code, created_at, updated_at)
+      VALUES ($1, $2, $3, LOWER($4), $5, $6, 'New', $7, $8, NOW(), NOW())
+      RETURNING id, reference_code, created_at
+    `;
+    try {
+      const result = await query(sql, [userType, category, name.trim(), email.trim(), phone, message.trim(), sourceIpHash, referenceCode]);
+      return result.rows[0];
+    } catch (err) {
+      if (err.code === '23505') {
+        continue;
+      }
+      throw err;
+    }
+  }
 }
 
 export async function listInquiries({

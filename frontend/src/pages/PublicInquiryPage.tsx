@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { toast } from 'sonner';
 import { Link, useSearchParams } from 'react-router-dom';
 import { api } from '../lib/api';
-import { Sparkles, Send, CheckCircle2, Loader2, Shield, GraduationCap, Award, Building2 } from 'lucide-react';
+import { Sparkles, Send, CheckCircle2, Loader2, Shield, GraduationCap, Award, Building2, Copy, Check, ArrowRight } from 'lucide-react';
 
 const publicInquirySchema = z.object({
   userType: z.enum(['Parent', 'Student', 'School'], {
@@ -100,6 +100,9 @@ export const PublicInquiryPage: React.FC = () => {
 
   const messageVal = watch('message') || '';
 
+  const [referenceCode, setReferenceCode] = React.useState<string | null>(null);
+  const [copied, setCopied] = React.useState(false);
+
   const onSubmit = async (data: FormData) => {
     // If bot filled the honeypot, silently abort
     if (data.honeypot && data.honeypot.length > 0) {
@@ -117,11 +120,13 @@ export const PublicInquiryPage: React.FC = () => {
 
     setIsSubmitting(true);
     try {
-      await api.post('/inquiries', {
+      const res = await api.post('/inquiries', {
         ...cleanData,
         phone: formattedPhone,
         ...(honeypot ? { website: honeypot } : {}),
       });
+      const returnedRef = res.data?.data?.referenceCode || null;
+      setReferenceCode(returnedRef);
       setIsSuccess(true);
       toast.success("Thank you! Your inquiry was submitted successfully.");
     } catch (err: any) {
@@ -132,8 +137,22 @@ export const PublicInquiryPage: React.FC = () => {
     }
   };
 
+  const handleCopyCode = async () => {
+    if (!referenceCode) return;
+    try {
+      await navigator.clipboard.writeText(referenceCode);
+      setCopied(true);
+      toast.success('Reference code copied to clipboard!');
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error('Could not copy to clipboard.');
+    }
+  };
+
   const handleReset = () => {
     reset();
+    setReferenceCode(null);
+    setCopied(false);
     setIsSuccess(false);
   };
 
@@ -211,20 +230,66 @@ export const PublicInquiryPage: React.FC = () => {
           <div className="lg:col-span-7 p-8 sm:p-10 bg-[#0F0F0F]/80">
             {isSuccess ? (
               // Animated Success State
-              <div className="py-12 px-4 flex flex-col items-center justify-center text-center animate-fade-in">
+              <div className="py-10 px-4 flex flex-col items-center justify-center text-center animate-fade-in">
                 <div className="w-16 h-16 rounded-full bg-[#4ADE80]/10 border border-[#4ADE80]/30 flex items-center justify-center text-[#4ADE80] mb-5 shadow-lg shadow-[#4ADE80]/10">
                   <CheckCircle2 className="w-8 h-8" />
                 </div>
                 <h3 className="text-2xl font-bold text-[#F5F5F5] mb-2">Thanks, we'll get back to you soon!</h3>
-                <p className="text-sm text-[#A3A3A3] max-w-md mb-8">
+                <p className="text-sm text-[#A3A3A3] max-w-md mb-6">
                   Your inquiry has been logged in our system. A counselor or coordinator will review your message and reach out via phone or email shortly.
                 </p>
-                <button
-                  onClick={handleReset}
-                  className="px-6 py-3 rounded-xl bg-[#FFD60A] hover:bg-[#FFE14D] text-[#0A0A0A] font-bold text-sm shadow-md transition-all active:scale-95"
-                >
-                  Submit another inquiry
-                </button>
+
+                {referenceCode && (
+                  <div className="w-full max-w-md p-4 rounded-xl bg-black/40 border border-[#FFD60A]/30 mb-6 text-left">
+                    <span className="text-[11px] uppercase tracking-wider text-[#A3A3A3] block mb-1">
+                      Your Tracking Reference Code
+                    </span>
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="font-mono text-xl font-extrabold text-[#FFD60A] tracking-wider">
+                        {referenceCode}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={handleCopyCode}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-xs text-[#F5F5F5] border border-white/10 transition-colors"
+                        aria-label="Copy reference code"
+                      >
+                        {copied ? (
+                          <>
+                            <Check className="w-3.5 h-3.5 text-[#4ADE80]" />
+                            <span className="text-[#4ADE80]">Copied</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-3.5 h-3.5" />
+                            <span>Copy</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                    <p className="text-[11px] text-[#A3A3A3] mt-2">
+                      Save this code to check the live status of your submission anytime.
+                    </p>
+                  </div>
+                )}
+
+                <div className="flex flex-col sm:flex-row items-center gap-3 w-full max-w-md justify-center">
+                  {referenceCode && (
+                    <Link
+                      to={`/track?ref=${referenceCode}`}
+                      className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#FFD60A] hover:bg-[#FFE14D] text-[#0A0A0A] font-bold text-xs shadow-md transition-all inline-flex items-center justify-center gap-1.5"
+                    >
+                      <span>Track Inquiry</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </Link>
+                  )}
+                  <button
+                    onClick={handleReset}
+                    className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-[#F5F5F5] font-semibold text-xs border border-white/10 transition-all"
+                  >
+                    Submit another inquiry
+                  </button>
+                </div>
               </div>
             ) : (
               // Form

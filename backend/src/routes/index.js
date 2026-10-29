@@ -4,6 +4,7 @@ import healthRoutes from './health.routes.js';
 import authRoutes from './auth.routes.js';
 import inquiriesRoutes from './inquiries.routes.js';
 import publicRoutes from './public.routes.js';
+import trackRoutes from './track.routes.js';
 import openapiSpec from '../docs/openapi.js';
 
 const router = Router();
@@ -18,5 +19,6 @@ router.use('/docs', swaggerUi.serve, swaggerUi.setup(openapiSpec, { customSiteTi
 router.use('/auth', authRoutes);
 router.use('/inquiries', inquiriesRoutes);
 router.use('/public', publicRoutes);
+router.use('/track', trackRoutes);
 
 export default router;

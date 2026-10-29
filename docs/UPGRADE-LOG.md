@@ -44,8 +44,8 @@
 | Phase | Module | Scope | Status | Commit |
 |---|---|---|---|---|
 | **V0** | Baseline | Checks, screenshots directory setup, log initialization | Completed | `d020c48` |
-| **V1** | P1 | Home Page + Ghost Fibers (WebGL + CSS fallback), route & background map, form prefill | Completed | Pending |
-| **V2** | N1 | Public Inquiry Tracker (`/track`), `reference_code` DB & migration, public stats API | In Progress | Pending |
+| **V1** | P1 | Home Page + Ghost Fibers (WebGL + CSS fallback), route & background map, form prefill | Completed | `804cda7` |
+| **V2** | N1 | Public Inquiry Tracker (`/track`), `reference_code` DB & migration, public stats API | Completed | Pending |
 | **V3** | N2 + N3 | Priority & Assignee workflow, duplicate/related contacts detection | Pending | Pending |
 | **V4** | N4 | Settings Page (`/admin/settings`), JWT `token_version` revocation, password change | Pending | Pending |
 | **V5** | N5 | Activity Feed (`/admin/activity`), audit log cursor timeline & filter chips | Pending | Pending |
@@ -58,6 +58,18 @@
   - `/`: HomePage + `GhostFibersBackground`
   - `/inquiry`: PublicInquiryPage + `AppBackground` (AeroShards)
   - `/track`: PublicTrackerPage + `AppBackground` (AeroShards)
+  - `/admin/login`: AdminLoginPage + `AppBackground` (AeroShards)
+  - `/admin`, `/admin/activity`, `/admin/settings`: AdminShell + `GridScan`
+  - Strictly 1 canvas mounted at any time.
+
+### V2 Deliverables Summary:
+- **Reference Code Generator & Validator**: Unambiguous 32-character alphabet (`23456789ABCDEFGHJKMNPQRSTUVWXYZ`), formatted as `KH-XXXXXXXX`.
+- **Database Migration (`backend/src/scripts/migrate.js`)**: Added `reference_code` column with unique index to `inquiries`, backfilled existing rows with conflict-safe loops, verified idempotent across multiple runs. Added `"db:migrate": "node src/scripts/migrate.js"`.
+- **Public Inquiry Endpoint**: Returns `referenceCode` on both initial creation and duplicate window match.
+- **Success Panel**: Displays highlighted reference code box, one-click clipboard copy button with toast, and direct "Track Inquiry" button.
+- **Tracker Endpoint (`POST /api/track`)**: Strict rate-limited (10 req/15 min/IP). Matches uppercase reference and lowercase email. Zero PII or internal IDs leaked. Returns sanitized timeline from activity logs.
+- **Tracker Page (`/track`)**: Interactive lookup form with auto-fill via `?ref=...`, visual 3-step pipeline (`Received` -> `In review` -> `Resolved`) with status badges and timeline history.
+- **Integration Tests**: 38/38 passing test suite including full tracking scenarios.
   - `/admin/login`: AdminLoginPage + `AppBackground` (AeroShards)
   - `/admin`, `/admin/activity`, `/admin/settings`: Admin dashboard + `GridScanBackground`
   - Redirects: `/submit` -> `/inquiry`, `/home` -> `/`
