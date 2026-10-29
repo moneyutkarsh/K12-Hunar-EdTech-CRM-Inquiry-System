@@ -4,11 +4,16 @@ import { Toaster } from 'sonner';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import AppBackground from './components/AppBackground';
 import GridScanBackground from './components/layout/GridScanBackground';
+import GhostFibersBackground from './components/layout/GhostFibersBackground';
 import Navbar from './components/Navbar';
 import ServerWakeBanner from './components/ServerWakeBanner';
+import HomePage from './pages/HomePage';
 import PublicInquiryPage from './pages/PublicInquiryPage';
+import PublicTrackerPage from './pages/PublicTrackerPage';
 import AdminLoginPage from './pages/AdminLoginPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
+import AdminActivityPage from './pages/AdminActivityPage';
+import AdminSettingsPage from './pages/AdminSettingsPage';
 import NotFoundPage from './pages/NotFoundPage';
 import { Loader2 } from 'lucide-react';
 
@@ -37,12 +42,15 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 // Main App Layout Wrapper with Background & Toast
 const AppLayout: React.FC = () => {
   const location = useLocation();
+  const isHome = location.pathname === '/';
   const isDashboard = location.pathname.startsWith('/admin') && location.pathname !== '/admin/login';
 
   return (
     <div className="relative min-h-screen text-[#F5F5F5] flex flex-col font-sans selection:bg-[#FFD60A] selection:text-[#0A0A0A] bg-[#050505]">
-      {/* Background layer: GridScan on admin area, AeroShards on public/login */}
-      {isDashboard ? (
+      {/* Background layer: GhostFibers on Home (/), GridScan on /admin, AeroShards on /inquiry, /track, /admin/login */}
+      {isHome ? (
+        <GhostFibersBackground />
+      ) : isDashboard ? (
         <GridScanBackground />
       ) : (
         <AppBackground isDashboard={false} />
@@ -51,19 +59,39 @@ const AppLayout: React.FC = () => {
       {/* Render Server Wakeup Banner */}
       <ServerWakeBanner />
 
-      {/* Top Navbar */}
-      <Navbar />
+      {/* Top Navbar: rendered on non-home pages (Home page renders its own rich header with anchor links) */}
+      {!isHome && <Navbar />}
 
       {/* Route Views */}
       <div className="flex-1 flex flex-col">
         <Routes>
-          <Route path="/" element={<PublicInquiryPage />} />
+          <Route path="/" element={<HomePage />} />
+          <Route path="/inquiry" element={<PublicInquiryPage />} />
+          <Route path="/track" element={<PublicTrackerPage />} />
+          <Route path="/submit" element={<Navigate to="/inquiry" replace />} />
+          <Route path="/home" element={<Navigate to="/" replace />} />
           <Route path="/admin/login" element={<AdminLoginPage />} />
           <Route
             path="/admin"
             element={
               <ProtectedRoute>
                 <AdminDashboardPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/activity"
+            element={
+              <ProtectedRoute>
+                <AdminActivityPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/settings"
+            element={
+              <ProtectedRoute>
+                <AdminSettingsPage />
               </ProtectedRoute>
             }
           />

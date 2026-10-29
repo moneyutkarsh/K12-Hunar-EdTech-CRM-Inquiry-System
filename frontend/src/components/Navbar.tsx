@@ -98,10 +98,35 @@ export const Navbar: React.FC = () => {
 
         {/* Desktop Links */}
         <div className="hidden md:flex items-center gap-4">
+          {!isDashboard && (
+            <>
+              <Link
+                to="/"
+                className={`text-sm px-3.5 py-1.5 rounded-lg transition-colors ${
+                  location.pathname === '/'
+                    ? 'text-[#FFD60A] bg-white/5 font-medium'
+                    : 'text-[#A3A3A3] hover:text-[#F5F5F5]'
+                }`}
+              >
+                Home
+              </Link>
+              <Link
+                to="/track"
+                className={`text-sm px-3.5 py-1.5 rounded-lg transition-colors ${
+                  location.pathname === '/track'
+                    ? 'text-[#FFD60A] bg-white/5 font-medium'
+                    : 'text-[#A3A3A3] hover:text-[#F5F5F5]'
+                }`}
+              >
+                Track Inquiry
+              </Link>
+            </>
+          )}
+
           <Link
-            to="/"
+            to="/inquiry"
             className={`text-sm px-3.5 py-1.5 rounded-lg transition-colors ${
-              location.pathname === '/'
+              location.pathname === '/inquiry'
                 ? 'text-[#FFD60A] bg-white/5 font-medium'
                 : 'text-[#A3A3A3] hover:text-[#F5F5F5]'
             }`}
@@ -252,7 +277,21 @@ export const Navbar: React.FC = () => {
             onClick={() => setMobileMenuOpen(false)}
             className="block px-3 py-2 rounded-lg text-sm text-[#F5F5F5] hover:bg-white/5"
           >
+            Home
+          </Link>
+          <Link
+            to="/inquiry"
+            onClick={() => setMobileMenuOpen(false)}
+            className="block px-3 py-2 rounded-lg text-sm text-[#F5F5F5] hover:bg-white/5"
+          >
             Submit Inquiry
+          </Link>
+          <Link
+            to="/track"
+            onClick={() => setMobileMenuOpen(false)}
+            className="block px-3 py-2 rounded-lg text-sm text-[#F5F5F5] hover:bg-white/5"
+          >
+            Track Inquiry
           </Link>
           {isAuthenticated ? (
             <>

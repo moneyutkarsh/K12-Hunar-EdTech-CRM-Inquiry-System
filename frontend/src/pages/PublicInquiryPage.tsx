@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { api } from '../lib/api';
 import { Sparkles, Send, CheckCircle2, Loader2, Shield, GraduationCap, Award, Building2 } from 'lucide-react';
 
@@ -50,21 +50,37 @@ const COUNTRY_CODES = [
 ];
 
 export const PublicInquiryPage: React.FC = () => {
+  const [searchParams] = useSearchParams();
   const [isSuccess, setIsSuccess] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [countryCode, setCountryCode] = useState<string>('+91');
+
+  const validUserTypes = ['Parent', 'Student', 'School'] as const;
+  const validCategories = ['Scholarship', 'Concert', 'Admission', 'General Query'] as const;
+
+  const paramUserType = searchParams.get('userType');
+  const paramCategory = searchParams.get('category');
+
+  const initialUserType = validUserTypes.includes(paramUserType as any)
+    ? (paramUserType as (typeof validUserTypes)[number])
+    : 'Parent';
+
+  const initialCategory = validCategories.includes(paramCategory as any)
+    ? (paramCategory as (typeof validCategories)[number])
+    : 'Admission';
 
   const {
     register,
     handleSubmit,
     watch,
     reset,
+    setValue,
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(publicInquirySchema),
     defaultValues: {
-      userType: 'Parent',
-      category: 'Admission',
+      userType: initialUserType,
+      category: initialCategory,
       name: '',
       email: '',
       phone: '',
@@ -72,6 +88,15 @@ export const PublicInquiryPage: React.FC = () => {
       honeypot: '',
     },
   });
+
+  React.useEffect(() => {
+    if (paramUserType && validUserTypes.includes(paramUserType as any)) {
+      setValue('userType', paramUserType as any);
+    }
+    if (paramCategory && validCategories.includes(paramCategory as any)) {
+      setValue('category', paramCategory as any);
+    }
+  }, [paramUserType, paramCategory, setValue]);
 
   const messageVal = watch('message') || '';
 

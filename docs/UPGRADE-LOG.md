@@ -43,11 +43,26 @@
 
 | Phase | Module | Scope | Status | Commit |
 |---|---|---|---|---|
-| **V0** | Baseline | Checks, screenshots directory setup, log initialization | Completed | `HEAD` |
-| **V1** | P1 | Home Page + Ghost Fibers (WebGL + CSS fallback), route & background map, form prefill | In Progress | Pending |
-| **V2** | N1 | Public Inquiry Tracker (`/track`), `reference_code` DB & migration, public stats API | Pending | Pending |
+| **V0** | Baseline | Checks, screenshots directory setup, log initialization | Completed | `d020c48` |
+| **V1** | P1 | Home Page + Ghost Fibers (WebGL + CSS fallback), route & background map, form prefill | Completed | Pending |
+| **V2** | N1 | Public Inquiry Tracker (`/track`), `reference_code` DB & migration, public stats API | In Progress | Pending |
 | **V3** | N2 + N3 | Priority & Assignee workflow, duplicate/related contacts detection | Pending | Pending |
 | **V4** | N4 | Settings Page (`/admin/settings`), JWT `token_version` revocation, password change | Pending | Pending |
 | **V5** | N5 | Activity Feed (`/admin/activity`), audit log cursor timeline & filter chips | Pending | Pending |
 | **V6** | N6 | Stretch goals (Hindi toggle, weekly summary, etc.) | Pending | Pending |
+
+### V1 Deliverables Summary:
+- **Home Page (`/`)**: Comprehensive public landing experience with sticky glass navbar, word-by-word reveal Space Grotesk headline, Services cards (`#services`), Stakeholders section (`#who`), 3-step process (`#how-it-works`), live public stats trust strip, accessible FAQ accordion with JSON-LD schema, and CTA band with footer.
+- **GhostFibers Background**: Installed from `@react-bits/GhostFibers-TS-TW` into `GhostFibersBackground.tsx`. Tuned for obsidian base (`#050505`), brand yellow (`#FFD60A`), warm amber (`#FB923C`), low density (0.35), capped DPR 1.5, tab visibility pause, IntersectionObserver hero scroll dimming (to 25%), and pure CSS diagonal streaks fallback. Zero camera/getUserMedia tracking. Dynamic chunk size: 26.94 kB (9.50 kB gzip).
+- **Route & Background Isolation Map**:
+  - `/`: HomePage + `GhostFibersBackground`
+  - `/inquiry`: PublicInquiryPage + `AppBackground` (AeroShards)
+  - `/track`: PublicTrackerPage + `AppBackground` (AeroShards)
+  - `/admin/login`: AdminLoginPage + `AppBackground` (AeroShards)
+  - `/admin`, `/admin/activity`, `/admin/settings`: Admin dashboard + `GridScanBackground`
+  - Redirects: `/submit` -> `/inquiry`, `/home` -> `/`
+  - Exactly one WebGL background canvas mounted at any time.
+- **Form Prefill**: Updated `PublicInquiryPage.tsx` to read optional `?category=` and `?userType=` query parameters with validation fallback.
+- **Public Stats API**: Created `GET /api/public/stats` with 60-second in-memory cache and rate limiting.
+
 
