@@ -34,9 +34,25 @@ const publicInquirySchema = z.object({
 
 type FormData = z.infer<typeof publicInquirySchema>;
 
+const COUNTRY_CODES = [
+  { code: '+91', country: 'India', flag: '🇮🇳' },
+  { code: '+1', country: 'US / Canada', flag: '🇺🇸' },
+  { code: '+44', country: 'UK', flag: '🇬🇧' },
+  { code: '+971', country: 'UAE', flag: '🇦🇪' },
+  { code: '+65', country: 'Singapore', flag: '🇸🇬' },
+  { code: '+61', country: 'Australia', flag: '🇦🇺' },
+  { code: '+49', country: 'Germany', flag: '🇩🇪' },
+  { code: '+966', country: 'Saudi Arabia', flag: '🇸🇦' },
+  { code: '+974', country: 'Qatar', flag: '🇶🇦' },
+  { code: '+965', country: 'Kuwait', flag: '🇰🇼' },
+  { code: '+33', country: 'France', flag: '🇫🇷' },
+  { code: '+81', country: 'Japan', flag: '🇯🇵' },
+];
+
 export const PublicInquiryPage: React.FC = () => {
   const [isSuccess, setIsSuccess] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [countryCode, setCountryCode] = useState<string>('+91');
 
   const {
     register,
@@ -66,9 +82,18 @@ export const PublicInquiryPage: React.FC = () => {
       return;
     }
 
+    const trimmedPhone = data.phone.trim();
+    let formattedPhone = trimmedPhone;
+    if (!trimmedPhone.startsWith('+')) {
+      formattedPhone = `${countryCode} ${trimmedPhone}`;
+    }
+
     setIsSubmitting(true);
     try {
-      await api.post('/inquiries', data);
+      await api.post('/inquiries', {
+        ...data,
+        phone: formattedPhone,
+      });
       setIsSuccess(true);
       toast.success("Thank you! Your inquiry was submitted successfully.");
     } catch (err: any) {
@@ -264,18 +289,32 @@ export const PublicInquiryPage: React.FC = () => {
                     )}
                   </div>
 
-                  {/* Phone */}
+                  {/* Phone with Country Option */}
                   <div>
                     <label htmlFor="phone" className="block text-xs font-semibold uppercase tracking-wider text-[#A3A3A3] mb-1.5">
                       Phone Number <span className="text-[#FFD60A]">*</span>
                     </label>
-                    <input
-                      id="phone"
-                      type="tel"
-                      placeholder="+91 98765 43210"
-                      {...register('phone')}
-                      className="w-full px-3.5 py-2.5 dark-input text-sm"
-                    />
+                    <div className="flex gap-2">
+                      <select
+                        aria-label="Country Code"
+                        value={countryCode}
+                        onChange={(e) => setCountryCode(e.target.value)}
+                        className="px-2.5 py-2.5 dark-input text-xs sm:text-sm cursor-pointer w-28 shrink-0 rounded-xl"
+                      >
+                        {COUNTRY_CODES.map((item) => (
+                          <option key={item.code} value={item.code}>
+                            {item.flag} {item.code}
+                          </option>
+                        ))}
+                      </select>
+                      <input
+                        id="phone"
+                        type="tel"
+                        placeholder="63943 98355"
+                        {...register('phone')}
+                        className="w-full px-3.5 py-2.5 dark-input text-sm rounded-xl"
+                      />
+                    </div>
                     {errors.phone && (
                       <p className="mt-1 text-xs text-[#F87171]">{errors.phone.message}</p>
                     )}
