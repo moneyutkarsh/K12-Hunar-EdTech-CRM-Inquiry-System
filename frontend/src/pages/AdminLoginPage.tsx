@@ -15,7 +15,6 @@ import {
   Lock,
   UserPlus,
   X,
-  Check,
   Mail,
   Send,
   KeyRound,
