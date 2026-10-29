@@ -465,7 +465,8 @@ export const InquiryTable: React.FC<InquiryTableProps> = ({
                   Date.now() - new Date(inquiry.created_at || inquiry.createdAt || '').getTime() <
                   24 * 3600 * 1000;
                 const isUnseen = isRecent && !seenIds.has(inquiry.id);
-                const digitsPhone = inquiry.phone.replace(/\D/g, '');
+                const rawDigits = (inquiry.phone || '').replace(/\D/g, '');
+                const digitsPhone = rawDigits.length === 10 ? `91${rawDigits}` : rawDigits;
                 const rowPadding = density === 'compact' ? 'py-2 px-4' : 'py-3.5 px-4';
 
                 return (
@@ -663,38 +664,50 @@ export const InquiryTable: React.FC<InquiryTableProps> = ({
                             <Copy className="w-3.5 h-3.5" />
                           </button>
 
-                          {/* Call Tel */}
+                          {/* Call / Web Dialer */}
                           <a
-                            href={`tel:${inquiry.phone}`}
-                            title="Call Phone"
+                            href={`https://voice.google.com/u/0/calls?keyword=${encodeURIComponent(digitsPhone)}`}
+                            onClick={(e) => {
+                              if (window.innerWidth < 768) {
+                                e.preventDefault();
+                                window.location.href = `tel:${inquiry.phone}`;
+                              }
+                            }}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title={`Call ${inquiry.phone} (Web Dialer)`}
                             aria-label={`Call ${inquiry.phone}`}
-                            className="p-1.5 rounded-lg text-[#A3A3A3] hover:text-[#4ADE80] hover:bg-white/5 transition-colors"
+                            className="p-1.5 rounded-lg text-[#A3A3A3] hover:text-[#4ADE80] hover:bg-white/5 transition-colors cursor-pointer"
                           >
                             <Phone className="w-3.5 h-3.5" />
                           </a>
 
-                          {/* WhatsApp */}
+                          {/* WhatsApp Web */}
                           <a
-                            href={`https://wa.me/${digitsPhone}?text=${encodeURIComponent(
+                            href={`https://web.whatsapp.com/send?phone=${digitsPhone}&text=${encodeURIComponent(
                               `Hello ${inquiry.name}, regarding your ${inquiry.category} inquiry with K12 Hunar:`
                             )}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            title="Chat on WhatsApp"
-                            aria-label="Chat on WhatsApp"
-                            className="p-1.5 rounded-lg text-[#A3A3A3] hover:text-[#22C55E] hover:bg-white/5 transition-colors"
+                            title="Open WhatsApp Web"
+                            aria-label="Chat on WhatsApp Web"
+                            className="p-1.5 rounded-lg text-[#A3A3A3] hover:text-[#22C55E] hover:bg-white/5 transition-colors cursor-pointer"
                           >
                             <MessageCircle className="w-3.5 h-3.5" />
                           </a>
 
-                          {/* Mailto */}
+                          {/* Gmail Web Compose */}
                           <a
-                            href={`mailto:${inquiry.email}?subject=${encodeURIComponent(
+                            href={`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(
+                              inquiry.email
+                            )}&su=${encodeURIComponent(
                               `K12 Hunar: Regarding your ${inquiry.category} inquiry`
                             )}`}
-                            title="Send Email"
-                            aria-label="Send email"
-                            className="p-1.5 rounded-lg text-[#A3A3A3] hover:text-[#60A5FA] hover:bg-white/5 transition-colors"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title="Compose in Gmail"
+                            aria-label="Send email via Gmail"
+                            className="p-1.5 rounded-lg text-[#A3A3A3] hover:text-[#60A5FA] hover:bg-white/5 transition-colors cursor-pointer"
                           >
                             <Mail className="w-3.5 h-3.5" />
                           </a>

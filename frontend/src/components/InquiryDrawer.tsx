@@ -248,7 +248,8 @@ export const InquiryDrawer: React.FC<InquiryDrawerProps> = ({
     timeStyle: 'short',
   });
 
-  const digitsPhone = currentItem.phone.replace(/\D/g, '');
+  const rawDigits = (currentItem.phone || '').replace(/\D/g, '');
+  const digitsPhone = rawDigits.length === 10 ? `91${rawDigits}` : rawDigits;
 
   const getStatusBadge = (status: InquiryStatus) => {
     switch (status) {
@@ -428,7 +429,10 @@ export const InquiryDrawer: React.FC<InquiryDrawerProps> = ({
                   <span>Email Address</span>
                 </div>
                 <a
-                  href={`mailto:${currentItem.email}`}
+                  href={`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(currentItem.email)}&su=${encodeURIComponent(`K12 Hunar: Regarding your ${currentItem.category} inquiry`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Open and compose in Gmail"
                   className="text-sm font-medium text-[#FFD60A] hover:underline break-all"
                 >
                   {currentItem.email}
@@ -441,7 +445,16 @@ export const InquiryDrawer: React.FC<InquiryDrawerProps> = ({
                   <span>Phone Number</span>
                 </div>
                 <a
-                  href={`tel:${currentItem.phone}`}
+                  href={`https://voice.google.com/u/0/calls?keyword=${encodeURIComponent(digitsPhone)}`}
+                  onClick={(e) => {
+                    if (window.innerWidth < 768) {
+                      e.preventDefault();
+                      window.location.href = `tel:${currentItem.phone}`;
+                    }
+                  }}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Call via Web Dialer"
                   className="text-sm font-medium text-[#F5F5F5] hover:text-[#FFD60A]"
                 >
                   {currentItem.phone}
@@ -650,23 +663,29 @@ export const InquiryDrawer: React.FC<InquiryDrawerProps> = ({
               </button>
 
               <a
-                href={`mailto:${currentItem.email}?subject=${encodeURIComponent(
+                href={`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(
+                  currentItem.email
+                )}&su=${encodeURIComponent(
                   `K12 Hunar: Regarding your inquiry (${currentItem.category})`
                 )}&body=${encodeURIComponent(customReplyText)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Open and compose in Gmail"
                 className="py-2.5 px-3 rounded-xl bg-[#FFD60A] hover:bg-[#FFE14D] text-[#0A0A0A] font-bold text-xs transition-all flex items-center justify-center gap-1.5"
               >
                 <Mail className="w-3.5 h-3.5" />
-                <span>Email Client</span>
+                <span>Open Gmail</span>
               </a>
 
               <a
-                href={`https://wa.me/${digitsPhone}?text=${encodeURIComponent(customReplyText)}`}
+                href={`https://web.whatsapp.com/send?phone=${digitsPhone}&text=${encodeURIComponent(customReplyText)}`}
                 target="_blank"
                 rel="noopener noreferrer"
+                title="Send reply on WhatsApp Web"
                 className="py-2.5 px-3 rounded-xl bg-[#22C55E] hover:bg-[#16A34A] text-white font-bold text-xs transition-all flex items-center justify-center gap-1.5"
               >
                 <MessageCircle className="w-3.5 h-3.5" />
-                <span>WhatsApp</span>
+                <span>WhatsApp Web</span>
               </a>
             </div>
           </div>
