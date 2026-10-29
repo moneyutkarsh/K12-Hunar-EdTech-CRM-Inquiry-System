@@ -9,6 +9,7 @@ import {
   LogOut,
   X,
   Keyboard,
+  Sparkles,
 } from 'lucide-react';
 
 interface CommandPaletteProps {
@@ -56,6 +57,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     { id: 'filter_status_new', label: 'Filter: Status -> New', icon: Filter, group: 'Status Filters', payload: 'New' },
     { id: 'filter_status_progress', label: 'Filter: Status -> In Progress', icon: Filter, group: 'Status Filters', payload: 'In Progress' },
     { id: 'filter_status_resolved', label: 'Filter: Status -> Resolved', icon: Filter, group: 'Status Filters', payload: 'Resolved' },
+    { id: 'toggle_bg_effects', label: 'Toggle Background Effects (Auto / On / Off)', icon: Sparkles, group: 'Settings' },
     { id: 'logout', label: 'Sign Out Admin Session', icon: LogOut, group: 'Session' },
   ];
 

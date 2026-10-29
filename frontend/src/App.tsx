@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-route
 import { Toaster } from 'sonner';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import AppBackground from './components/AppBackground';
+import GridScanBackground from './components/layout/GridScanBackground';
 import Navbar from './components/Navbar';
 import ServerWakeBanner from './components/ServerWakeBanner';
 import PublicInquiryPage from './pages/PublicInquiryPage';
@@ -39,9 +40,13 @@ const AppLayout: React.FC = () => {
   const isDashboard = location.pathname.startsWith('/admin') && location.pathname !== '/admin/login';
 
   return (
-    <div className="relative min-h-screen text-[#F5F5F5] flex flex-col font-sans selection:bg-[#FFD60A] selection:text-[#0A0A0A]">
-      {/* Background layer */}
-      <AppBackground isDashboard={isDashboard} />
+    <div className="relative min-h-screen text-[#F5F5F5] flex flex-col font-sans selection:bg-[#FFD60A] selection:text-[#0A0A0A] bg-[#050505]">
+      {/* Background layer: GridScan on admin area, AeroShards on public/login */}
+      {isDashboard ? (
+        <GridScanBackground />
+      ) : (
+        <AppBackground isDashboard={false} />
+      )}
 
       {/* Render Server Wakeup Banner */}
       <ServerWakeBanner />

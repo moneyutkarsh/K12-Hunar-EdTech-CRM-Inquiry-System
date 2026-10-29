@@ -1,5 +1,11 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { X, Keyboard } from 'lucide-react';
+import { toast } from 'sonner';
+import {
+  getStoredBackgroundSetting,
+  setStoredBackgroundSetting,
+  type BackgroundSetting,
+} from '../utils/backgroundDecision';
 
 interface ShortcutsModalProps {
   isOpen: boolean;
@@ -26,6 +32,16 @@ const SHORTCUTS: ShortcutItem[] = [
 ];
 
 export const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose }) => {
+  const [bgSetting, setBgSetting] = useState<BackgroundSetting>(getStoredBackgroundSetting);
+
+  const handleBgChange = (mode: BackgroundSetting) => {
+    setBgSetting(mode);
+    setStoredBackgroundSetting(mode);
+    window.dispatchEvent(
+      new CustomEvent('k12-bg-setting-changed', { detail: { setting: mode } })
+    );
+    toast.success(`Background effects set to ${mode.toUpperCase()}`);
+  };
   useEffect(() => {
     if (!isOpen) return;
 
@@ -114,12 +130,36 @@ export const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose 
           })}
         </div>
 
+        {/* Background Effects Settings (Section 5) */}
+        <div className="py-2.5 px-3 rounded-xl bg-white/[0.03] border border-white/5 flex items-center justify-between text-xs">
+          <div className="flex items-center gap-2">
+            <span className="font-semibold text-[#F5F5F5]">Background Effects</span>
+            <span className="text-[10px] text-[#A3A3A3] hidden sm:inline">(GridScan WebGL)</span>
+          </div>
+          <div className="inline-flex rounded-lg bg-black/50 p-0.5 border border-white/10 text-[11px]">
+            {(['auto', 'on', 'off'] as const).map((mode) => (
+              <button
+                key={mode}
+                type="button"
+                onClick={() => handleBgChange(mode)}
+                className={`px-2.5 py-0.5 rounded font-medium capitalize transition-all cursor-pointer ${
+                  bgSetting === mode
+                    ? 'bg-[#FFD60A] text-[#0A0A0A] font-bold shadow-sm'
+                    : 'text-[#A3A3A3] hover:text-[#F5F5F5]'
+                }`}
+              >
+                {mode}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Footer */}
         <div className="pt-3 border-t border-white/10 flex items-center justify-between text-[11px] text-[#A3A3A3]">
           <span>Tip: Press <kbd className="px-1.5 py-0.5 rounded bg-white/10 text-[#F5F5F5]">?</kbd> anywhere to toggle</span>
           <button
             onClick={onClose}
-            className="px-3 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-[#F5F5F5] transition-colors"
+            className="px-3 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-[#F5F5F5] transition-colors cursor-pointer"
           >
             Close
           </button>
