@@ -66,6 +66,16 @@ async function migrate() {
       CREATE INDEX IF NOT EXISTS idx_inquiries_priority ON inquiries (priority);
       CREATE INDEX IF NOT EXISTS idx_inquiries_assigned_to ON inquiries (assigned_to);
       CREATE INDEX IF NOT EXISTS idx_activity_log_cursor ON activity_log (created_at DESC, id);
+      CREATE TABLE IF NOT EXISTS auth_otps (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        email TEXT NOT NULL,
+        code TEXT NOT NULL,
+        provider TEXT NOT NULL DEFAULT 'email',
+        attempts INT NOT NULL DEFAULT 0,
+        expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+        created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS idx_auth_otps_email ON auth_otps (email);
     `);
 
     console.log('✅ Database migration completed successfully!');

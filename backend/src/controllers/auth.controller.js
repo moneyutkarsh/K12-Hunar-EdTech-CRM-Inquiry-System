@@ -5,6 +5,7 @@ import {
   logoutAllSessions,
   authenticateOAuth,
 } from '../services/auth.service.js';
+import { sendOtp, verifyOtp } from '../services/otp.service.js';
 
 export async function login(req, res) {
   const { email, password } = req.body;
@@ -134,6 +135,34 @@ export async function oauthMicrosoft(req, res) {
   });
 }
 
-export default { login, signup, getMe, changePassword, logoutAll, oauthGoogle, oauthMicrosoft };
+export async function sendVerificationOtp(req, res) {
+  const { email, provider } = req.body;
+  const result = await sendOtp({ email, provider });
+  return res.status(200).json(result);
+}
+
+export async function verifyVerificationOtp(req, res) {
+  const { email, code } = req.body;
+  const result = await verifyOtp({ email, code, clientIp: req.ip });
+  return res.status(200).json({
+    message: result.message,
+    token: result.token,
+    expiresAt: result.expiresAt,
+    admin: result.admin,
+    data: result,
+  });
+}
+
+export default {
+  login,
+  signup,
+  getMe,
+  changePassword,
+  logoutAll,
+  oauthGoogle,
+  oauthMicrosoft,
+  sendVerificationOtp,
+  verifyVerificationOtp,
+};
 
 
