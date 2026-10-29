@@ -8,6 +8,8 @@ import StatCard from '../components/StatCard';
 import InquiryTable from '../components/InquiryTable';
 import InquiryBoard from '../components/InquiryBoard';
 import InquiryDrawer from '../components/InquiryDrawer';
+import AnalyticsPanel from '../components/AnalyticsPanel';
+import CommandPalette from '../components/CommandPalette';
 import {
   Inbox,
   Clock,
@@ -22,6 +24,7 @@ import {
   LogOut,
   Calendar,
   Sparkles,
+  Command,
 } from 'lucide-react';
 
 export const AdminDashboardPage: React.FC = () => {
@@ -55,6 +58,8 @@ export const AdminDashboardPage: React.FC = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState<boolean>(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState<boolean>(false);
   const [isExporting, setIsExporting] = useState<boolean>(false);
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState<boolean>(false);
+  const previousTotalRef = React.useRef<number | null>(null);
 
   // Filters read directly from URL query params
   const categoryFilter = searchParams.get('category') || '';
@@ -147,15 +152,36 @@ export const AdminDashboardPage: React.FC = () => {
     }
   }, [categoryFilter, userTypeFilter, statusFilter, searchQuery, currentPage, sortOrder]);
 
-  // Fetch Stats from Backend
-  const fetchStats = useCallback(async () => {
-    try {
-      const res = await api.get('/inquiries/stats');
-      setStats(res.data);
-    } catch {
-      // Handled silently
-    }
-  }, []);
+  // Fetch Stats from Backend (with new-inquiry awareness)
+  const fetchStats = useCallback(
+    async (isPolling = false) => {
+      try {
+        const res = await api.get('/inquiries/stats');
+        const incoming = res.data;
+        if (
+          isPolling &&
+          previousTotalRef.current !== null &&
+          incoming.total > previousTotalRef.current
+        ) {
+          const diff = incoming.total - previousTotalRef.current;
+          toast.info(`${diff} new inquiry received!`, {
+            action: {
+              label: 'Refresh',
+              onClick: () => {
+                fetchInquiries();
+                fetchStats(false);
+              },
+            },
+          });
+        }
+        previousTotalRef.current = incoming.total;
+        setStats(incoming);
+      } catch {
+        // Handled silently
+      }
+    },
+    [fetchInquiries]
+  );
 
   // Trigger loads on parameter changes
   useEffect(() => {
@@ -163,8 +189,67 @@ export const AdminDashboardPage: React.FC = () => {
   }, [fetchInquiries]);
 
   useEffect(() => {
-    fetchStats();
+    fetchStats(false);
   }, [fetchStats]);
+
+  // New-inquiry awareness: poll /stats every 30s while tab is visible
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        fetchStats(true);
+      }
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [fetchStats]);
+
+  // Global Keyboard Shortcut: Ctrl/Cmd + K
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setIsCommandPaletteOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // Action handler for Command Palette
+  const handleCommandAction = (actionId: string, payload?: string) => {
+    switch (actionId) {
+      case 'focus_search': {
+        const el = document.getElementById('dashboard-search-input');
+        if (el) el.focus();
+        break;
+      }
+      case 'view_table':
+        setActiveView('table');
+        break;
+      case 'view_board':
+        setActiveView('board');
+        break;
+      case 'export_csv':
+        handleExportCsv();
+        break;
+      case 'reset_filters':
+        handleClearFilters();
+        break;
+      case 'filter_cat_scholarship':
+      case 'filter_cat_concert':
+      case 'filter_cat_admission':
+      case 'filter_cat_general':
+        if (payload) updateQueryParam({ category: payload, page: '1' });
+        break;
+      case 'filter_status_new':
+      case 'filter_status_progress':
+      case 'filter_status_resolved':
+        if (payload) updateQueryParam({ status: payload, page: '1' });
+        break;
+      case 'logout':
+        logout();
+        break;
+    }
+  };
 
   // Optimistic Status Update Handler
   const handleStatusChange = async (id: string, newStatus: InquiryStatus) => {
@@ -315,30 +400,45 @@ export const AdminDashboardPage: React.FC = () => {
             </p>
           </div>
 
-          {/* View Mode Toggle: Table vs Board */}
-          <div className="flex items-center gap-1.5 p-1 bg-[#141414] rounded-xl border border-white/10 self-start sm:self-auto">
+          {/* Header Controls: Command Palette and View Switcher */}
+          <div className="flex items-center gap-2.5 self-start sm:self-auto">
             <button
-              onClick={() => setActiveView('table')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                activeView === 'table'
-                  ? 'bg-[#FFD60A] text-[#0A0A0A] shadow-sm'
-                  : 'text-[#A3A3A3] hover:text-[#F5F5F5]'
-              }`}
+              onClick={() => setIsCommandPaletteOpen(true)}
+              className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-xs text-[#A3A3A3] hover:text-[#F5F5F5] border border-white/10 transition-colors"
+              title="Open Command Palette (Ctrl+K / Cmd+K)"
             >
-              <TableIcon className="w-3.5 h-3.5" />
-              <span>Table</span>
+              <Command className="w-3.5 h-3.5 text-[#FFD60A]" />
+              <span>Actions</span>
+              <kbd className="px-1.5 py-0.5 rounded bg-white/10 text-[10px] font-mono text-[#F5F5F5]">
+                ⌘K
+              </kbd>
             </button>
-            <button
-              onClick={() => setActiveView('board')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                activeView === 'board'
-                  ? 'bg-[#FFD60A] text-[#0A0A0A] shadow-sm'
-                  : 'text-[#A3A3A3] hover:text-[#F5F5F5]'
-              }`}
-            >
-              <Kanban className="w-3.5 h-3.5" />
-              <span>Board</span>
-            </button>
+
+            {/* View Mode Toggle: Table vs Board */}
+            <div className="flex items-center gap-1.5 p-1 bg-[#141414] rounded-xl border border-white/10">
+              <button
+                onClick={() => setActiveView('table')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  activeView === 'table'
+                    ? 'bg-[#FFD60A] text-[#0A0A0A] shadow-sm'
+                    : 'text-[#A3A3A3] hover:text-[#F5F5F5]'
+                }`}
+              >
+                <TableIcon className="w-3.5 h-3.5" />
+                <span>Table</span>
+              </button>
+              <button
+                onClick={() => setActiveView('board')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  activeView === 'board'
+                    ? 'bg-[#FFD60A] text-[#0A0A0A] shadow-sm'
+                    : 'text-[#A3A3A3] hover:text-[#F5F5F5]'
+                }`}
+              >
+                <Kanban className="w-3.5 h-3.5" />
+                <span>Board</span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -374,6 +474,9 @@ export const AdminDashboardPage: React.FC = () => {
           />
         </div>
 
+        {/* Collapsible Trends & Analytics Panel */}
+        <AnalyticsPanel />
+
         {/* Toolbar: Search, Filters, CSV Export */}
         <div className="glass-card p-4 space-y-3">
           <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
@@ -381,6 +484,7 @@ export const AdminDashboardPage: React.FC = () => {
             <div className="relative flex-1 max-w-md">
               <Search className="w-4 h-4 text-[#A3A3A3] absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
+                id="dashboard-search-input"
                 type="text"
                 placeholder="Search by name or phone..."
                 value={searchInput}
@@ -503,6 +607,13 @@ export const AdminDashboardPage: React.FC = () => {
         onClose={() => setIsDrawerOpen(false)}
         onStatusChange={handleStatusChange}
         isUpdatingStatus={isUpdatingStatus}
+      />
+
+      {/* Global Command Palette */}
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => setIsCommandPaletteOpen(false)}
+        onSelectAction={handleCommandAction}
       />
     </div>
   );
