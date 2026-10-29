@@ -25,7 +25,22 @@ export async function listActivityByInquiryId(inquiryId) {
   `;
   try {
     const result = await query(sql, [inquiryId]);
-    return result.rows;
+    return (result.rows || []).map((r) => ({
+      id: r.id,
+      inquiryId: r.inquiry_id,
+      inquiry_id: r.inquiry_id,
+      adminId: r.admin_id,
+      admin_id: r.admin_id,
+      adminEmail: r.admin_email,
+      admin_email: r.admin_email,
+      action: r.action,
+      fromValue: r.from_value,
+      from_value: r.from_value,
+      toValue: r.to_value,
+      to_value: r.to_value,
+      createdAt: r.created_at,
+      created_at: r.created_at,
+    }));
   } catch (err) {
     return [];
   }

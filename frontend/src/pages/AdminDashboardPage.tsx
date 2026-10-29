@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { api } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
@@ -38,6 +38,9 @@ import {
   Keyboard,
   X,
   Flame,
+  Activity,
+  Settings,
+  User,
 } from 'lucide-react';
 
 export const AdminDashboardPage: React.FC = () => {
@@ -116,6 +119,8 @@ export const AdminDashboardPage: React.FC = () => {
   const categoryFilter = searchParams.get('category') || '';
   const userTypeFilter = searchParams.get('userType') || '';
   const statusFilter = searchParams.get('status') || '';
+  const priorityFilter = searchParams.get('priority') || '';
+  const assignedToFilter = searchParams.get('assignedTo') || '';
   const searchQuery = searchParams.get('search') || '';
   const fromParam = searchParams.get('from') || '';
   const toParam = searchParams.get('to') || '';
@@ -193,6 +198,8 @@ export const AdminDashboardPage: React.FC = () => {
       if (categoryFilter) params.category = categoryFilter;
       if (userTypeFilter) params.userType = userTypeFilter;
       if (statusFilter) params.status = statusFilter;
+      if (priorityFilter) params.priority = priorityFilter;
+      if (assignedToFilter) params.assignedTo = assignedToFilter;
       if (searchQuery && searchQuery.trim().length >= 2) params.search = searchQuery.trim();
       if (fromParam) params.from = fromParam;
       if (toParam) params.to = toParam;
@@ -209,7 +216,7 @@ export const AdminDashboardPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [categoryFilter, userTypeFilter, statusFilter, searchQuery, fromParam, toParam, currentPage, currentLimit, sortOrder]);
+  }, [categoryFilter, userTypeFilter, statusFilter, priorityFilter, assignedToFilter, searchQuery, fromParam, toParam, currentPage, currentLimit, sortOrder]);
 
   // Fetch Stats from Backend
   const fetchStats = useCallback(
@@ -457,6 +464,8 @@ export const AdminDashboardPage: React.FC = () => {
       if (categoryFilter) params.category = categoryFilter;
       if (userTypeFilter) params.userType = userTypeFilter;
       if (statusFilter) params.status = statusFilter;
+      if (priorityFilter) params.priority = priorityFilter;
+      if (assignedToFilter) params.assignedTo = assignedToFilter;
       if (searchQuery && searchQuery.trim().length >= 2) params.search = searchQuery.trim();
       if (fromParam) params.from = fromParam;
       if (toParam) params.to = toParam;
@@ -491,7 +500,7 @@ export const AdminDashboardPage: React.FC = () => {
   };
 
   const hasActiveFilters = Boolean(
-    categoryFilter || userTypeFilter || statusFilter || searchQuery || fromParam || toParam
+    categoryFilter || userTypeFilter || statusFilter || priorityFilter || assignedToFilter || searchQuery || fromParam || toParam
   );
 
   // Drawer Navigation Helpers (U5a)
@@ -588,6 +597,28 @@ export const AdminDashboardPage: React.FC = () => {
               <Kanban className="w-4 h-4 text-[#FFD60A] shrink-0" />
               {!isSidebarCollapsed && <span>Pipeline Board</span>}
             </button>
+
+            <Link
+              to="/admin/activity"
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all text-[#A3A3A3] hover:text-[#F5F5F5] hover:bg-white/5 ${
+                isSidebarCollapsed ? 'justify-center px-2' : ''
+              }`}
+              title="Activity Feed"
+            >
+              <Activity className="w-4 h-4 text-[#A3A3A3] group-hover:text-[#FFD60A] shrink-0" />
+              {!isSidebarCollapsed && <span>Activity Feed</span>}
+            </Link>
+
+            <Link
+              to="/admin/settings"
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all text-[#A3A3A3] hover:text-[#F5F5F5] hover:bg-white/5 ${
+                isSidebarCollapsed ? 'justify-center px-2' : ''
+              }`}
+              title="Admin Settings"
+            >
+              <Settings className="w-4 h-4 text-[#A3A3A3] group-hover:text-[#FFD60A] shrink-0" />
+              {!isSidebarCollapsed && <span>Settings</span>}
+            </Link>
           </nav>
 
           {/* U6a (i): Quick Views List */}
@@ -665,6 +696,42 @@ export const AdminDashboardPage: React.FC = () => {
                   </span>
                   <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#4ADE80]/10 text-[#4ADE80] font-semibold">
                     {stats.resolved}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    updateQueryParam({ assignedTo: 'me', page: '1' });
+                    setActiveView('table');
+                  }}
+                  className={`w-full flex items-center justify-between px-3 py-1.5 rounded-lg text-xs transition-colors ${
+                    assignedToFilter === 'me'
+                      ? 'bg-white/10 text-[#FFD60A] font-medium'
+                      : 'text-[#A3A3A3] hover:text-[#F5F5F5] hover:bg-white/5'
+                  }`}
+                >
+                  <span className="flex items-center gap-1.5">
+                    <User className="w-3.5 h-3.5 text-[#FFD60A]" />
+                    <span>Assigned to Me</span>
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    updateQueryParam({ priority: 'Urgent', page: '1' });
+                    setActiveView('table');
+                  }}
+                  className={`w-full flex items-center justify-between px-3 py-1.5 rounded-lg text-xs transition-colors ${
+                    priorityFilter === 'Urgent'
+                      ? 'bg-white/10 text-[#F87171] font-medium'
+                      : 'text-[#A3A3A3] hover:text-[#F5F5F5] hover:bg-white/5'
+                  }`}
+                >
+                  <span className="flex items-center gap-1.5">
+                    <Flame className="w-3.5 h-3.5 text-[#F87171]" />
+                    <span>Urgent Inquiries</span>
                   </span>
                 </button>
               </div>
@@ -1111,6 +1178,17 @@ export const AdminDashboardPage: React.FC = () => {
         isOpen={isDrawerOpen}
         onClose={() => setIsDrawerOpen(false)}
         onStatusChange={handleStatusChange}
+        onPriorityChange={async (id, newPriority) => {
+          setInquiries((prev) =>
+            prev.map((item) => (item.id === id ? { ...item, priority: newPriority } : item))
+          );
+        }}
+        onAssigneeChange={async () => {
+          fetchInquiries();
+        }}
+        onSelectInquiry={(inq) => {
+          setSelectedInquiry(inq);
+        }}
         isUpdatingStatus={isUpdatingStatus}
         hasPrev={hasPrev}
         hasNext={hasNext}

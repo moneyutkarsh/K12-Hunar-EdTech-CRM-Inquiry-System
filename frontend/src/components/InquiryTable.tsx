@@ -18,6 +18,7 @@ import {
   SlidersHorizontal,
   ChevronDown as ChevronDownIcon,
   Download,
+  Flame,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -523,8 +524,35 @@ export const InquiryTable: React.FC<InquiryTableProps> = ({
 
                         {/* Name & message snippet */}
                         <div className="min-w-0">
-                          <div className="font-semibold text-[#F5F5F5] group-hover:text-[#FFD60A] transition-colors truncate">
-                            {highlightMatch(inquiry.name, searchQuery)}
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="font-semibold text-[#F5F5F5] group-hover:text-[#FFD60A] transition-colors truncate">
+                              {highlightMatch(inquiry.name, searchQuery)}
+                            </span>
+                            {inquiry.contactCount && inquiry.contactCount > 1 ? (
+                              <span
+                                title={`${inquiry.contactCount} inquiries from this contact`}
+                                className="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-bold bg-[#FFD60A]/15 text-[#FFD60A] border border-[#FFD60A]/30 shrink-0"
+                              >
+                                ×{inquiry.contactCount}
+                              </span>
+                            ) : null}
+                            {inquiry.priority === 'Urgent' && (
+                              <span
+                                title="Priority: Urgent"
+                                className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded text-[10px] font-bold bg-[#F87171]/15 text-[#F87171] border border-[#F87171]/30 shrink-0"
+                              >
+                                <Flame className="w-2.5 h-2.5" />
+                                Urgent
+                              </span>
+                            )}
+                            {inquiry.priority === 'High' && (
+                              <span
+                                title="Priority: High"
+                                className="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-semibold bg-[#FB923C]/15 text-[#FB923C] border border-[#FB923C]/30 shrink-0"
+                              >
+                                High
+                              </span>
+                            )}
                           </div>
                           <p
                             className="text-[11px] text-[#A3A3A3] truncate max-w-[200px]"
@@ -559,12 +587,23 @@ export const InquiryTable: React.FC<InquiryTableProps> = ({
                       </td>
                     )}
 
-                    {/* Category */}
+                    {/* Category + Assignee */}
                     {visibleColumns.category && (
                       <td className={rowPadding}>
                         <span className="text-[11px] px-2 py-0.5 rounded-full border bg-white/5 text-[#A3A3A3] border-white/10">
                           {inquiry.category}
                         </span>
+                        {inquiry.assignee && (
+                          <div
+                            title={`Assigned to ${inquiry.assignee.name}`}
+                            className="text-[10px] text-[#A3A3A3] flex items-center gap-1 mt-1"
+                          >
+                            <span className="w-3.5 h-3.5 rounded-full bg-white/10 text-[#FFD60A] font-bold flex items-center justify-center text-[8px] shrink-0">
+                              {inquiry.assignee.name.charAt(0)}
+                            </span>
+                            <span className="truncate max-w-[85px]">{inquiry.assignee.name.split(' ')[0]}</span>
+                          </div>
+                        )}
                       </td>
                     )}
 

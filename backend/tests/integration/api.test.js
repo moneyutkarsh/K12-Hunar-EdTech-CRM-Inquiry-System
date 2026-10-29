@@ -238,5 +238,82 @@ describe('Integration Tests: Complete API Suite', () => {
       expect(res.body.updatedCount).toBeGreaterThanOrEqual(1);
       expect(res.body.status).toBe('In Progress');
     });
+
+    it('GET /api/admins/options returns list of active team admins', async () => {
+      const res = await request(app)
+        .get('/api/admins/options')
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(res.status).toBe(200);
+      expect(Array.isArray(res.body)).toBe(true);
+      expect(res.body.length).toBeGreaterThanOrEqual(1);
+      expect(res.body[0].id).toBeDefined();
+      expect(res.body[0].email).toBeDefined();
+    });
+
+    it('PATCH /api/inquiries/:id/priority updates priority and logs activity', async () => {
+      if (!createdInquiryId) return;
+
+      const res = await request(app)
+        .patch(`/api/inquiries/${createdInquiryId}/priority`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({ priority: 'Urgent' });
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.priority).toBe('Urgent');
+
+      // Verify activity was logged
+      const detailRes = await request(app)
+        .get(`/api/inquiries/${createdInquiryId}`)
+        .set('Authorization', `Bearer ${authToken}`);
+      const priorityLog = detailRes.body.data.activity.find((a) => a.action === 'priority_changed');
+      expect(priorityLog).toBeDefined();
+      expect(priorityLog.toValue).toBe('Urgent');
+    });
+
+    it('PATCH /api/inquiries/:id/assign assigns inquiry to admin', async () => {
+      if (!createdInquiryId) return;
+
+      // Fetch admin options to assign to
+      const adminOptionsRes = await request(app)
+        .get('/api/admins/options')
+        .set('Authorization', `Bearer ${authToken}`);
+      const targetAdmin = adminOptionsRes.body[0];
+
+      const res = await request(app)
+        .patch(`/api/inquiries/${createdInquiryId}/assign`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({ adminId: targetAdmin.id });
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.assignedTo).toBe(targetAdmin.id);
+      expect(res.body.data.assignee).toBeDefined();
+      expect(res.body.data.assignee.email).toBe(targetAdmin.email);
+    });
+
+    it('GET /api/inquiries with priority filter returns filtered results', async () => {
+      const res = await request(app)
+        .get('/api/inquiries?priority=Urgent')
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(res.status).toBe(200);
+      expect(Array.isArray(res.body.data)).toBe(true);
+      res.body.data.forEach((row) => {
+        expect(row.priority).toBe('Urgent');
+      });
+    });
+
+    it('GET /api/inquiries includes contactCount and referenceCode', async () => {
+      const res = await request(app)
+        .get('/api/inquiries?page=1&limit=5')
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.length).toBeGreaterThan(0);
+      const first = res.body.data[0];
+      expect(first.referenceCode).toBeDefined();
+      expect(typeof first.contactCount).toBe('number');
+      expect(first.priority).toBeDefined();
+    });
   });
 });

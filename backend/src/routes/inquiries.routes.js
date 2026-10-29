@@ -4,6 +4,8 @@ import {
   list,
   getById,
   updateStatus,
+  updatePriority,
+  updateAssignee,
   bulkUpdateStatus,
   addNote,
   getNotes,
@@ -15,6 +17,8 @@ import {
 import {
   createInquirySchema,
   updateStatusSchema,
+  updatePrioritySchema,
+  updateAssigneeSchema,
   createNoteSchema,
   uuidParamSchema,
 } from '../validators/inquiry.schema.js';
@@ -57,6 +61,24 @@ router.patch(
   validate(uuidParamSchema, 'params'),
   validate(updateStatusSchema),
   asyncHandler(updateStatus)
+);
+
+// Protected: Update inquiry priority (writes activity audit log)
+router.patch(
+  '/:id/priority',
+  auth,
+  validate(uuidParamSchema, 'params'),
+  validate(updatePrioritySchema),
+  asyncHandler(updatePriority)
+);
+
+// Protected: Assign inquiry to admin (writes activity audit log)
+router.patch(
+  '/:id/assign',
+  auth,
+  validate(uuidParamSchema, 'params'),
+  validate(updateAssigneeSchema),
+  asyncHandler(updateAssignee)
 );
 
 // Protected: Get notes for an inquiry

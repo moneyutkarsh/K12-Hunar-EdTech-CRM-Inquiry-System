@@ -5,6 +5,7 @@ import authRoutes from './auth.routes.js';
 import inquiriesRoutes from './inquiries.routes.js';
 import publicRoutes from './public.routes.js';
 import trackRoutes from './track.routes.js';
+import adminsRoutes from './admins.routes.js';
 import openapiSpec from '../docs/openapi.js';
 
 const router = Router();
@@ -20,5 +21,6 @@ router.use('/auth', authRoutes);
 router.use('/inquiries', inquiriesRoutes);
 router.use('/public', publicRoutes);
 router.use('/track', trackRoutes);
+router.use('/admins', adminsRoutes);
 
 export default router;

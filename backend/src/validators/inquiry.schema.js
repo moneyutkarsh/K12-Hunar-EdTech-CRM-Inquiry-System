@@ -40,11 +40,27 @@ export const createInquirySchema = z
   })
   .strict();
 
+export const PRIORITIES = ['Low', 'Normal', 'High', 'Urgent'];
+
 export const updateStatusSchema = z
   .object({
     status: z.enum(STATUSES, {
       message: 'Status must be New, In Progress, or Resolved',
     }),
+  })
+  .strict();
+
+export const updatePrioritySchema = z
+  .object({
+    priority: z.enum(PRIORITIES, {
+      message: 'Priority must be Low, Normal, High, or Urgent',
+    }),
+  })
+  .strict();
+
+export const updateAssigneeSchema = z
+  .object({
+    adminId: z.string().uuid('Invalid admin UUID format').nullable(),
   })
   .strict();
 
@@ -67,6 +83,8 @@ export const uuidParamSchema = z
 export default {
   createInquirySchema,
   updateStatusSchema,
+  updatePrioritySchema,
+  updateAssigneeSchema,
   createNoteSchema,
   uuidParamSchema,
 };

@@ -1,9 +1,31 @@
 export type UserType = 'Parent' | 'Student' | 'School';
 export type Category = 'Scholarship' | 'Concert' | 'Admission' | 'General Query';
 export type InquiryStatus = 'New' | 'In Progress' | 'Resolved';
+export type InquiryPriority = 'Low' | 'Normal' | 'High' | 'Urgent';
+
+export interface Assignee {
+  id: string;
+  name: string;
+  email: string;
+  avatarUrl?: string | null;
+  role?: string;
+}
+
+export interface RelatedInquiry {
+  id: string;
+  referenceCode?: string;
+  reference_code?: string;
+  category: Category;
+  status: InquiryStatus;
+  priority: InquiryPriority;
+  createdAt?: string;
+  created_at?: string;
+}
 
 export interface Inquiry {
   id: string;
+  referenceCode?: string;
+  reference_code?: string;
   user_type: UserType;
   userType?: UserType;
   category: Category;
@@ -12,6 +34,13 @@ export interface Inquiry {
   phone: string;
   message: string;
   status: InquiryStatus;
+  priority?: InquiryPriority;
+  assignedTo?: string | null;
+  assigned_to?: string | null;
+  assignee?: Assignee | null;
+  contactCount?: number;
+  contact_count?: number;
+  related?: RelatedInquiry[];
   created_at: string;
   createdAt?: string;
   updated_at: string;
@@ -63,6 +92,8 @@ export interface InquiryFilters {
   category: string;
   userType: string;
   status: string;
+  priority?: string;
+  assignedTo?: string;
   search: string;
   page: number;
   limit: number;

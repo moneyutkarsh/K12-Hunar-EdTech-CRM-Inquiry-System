@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import type { Inquiry, InquiryStatus } from '../types/inquiry';
+import type { Inquiry, InquiryStatus, InquiryPriority, Assignee, RelatedInquiry } from '../types/inquiry';
 import { api } from '../lib/api';
 import { toast } from 'sonner';
 import {
@@ -13,13 +13,15 @@ import {
   History,
   Send,
   FileText,
-  Clock,
-  ShieldCheck,
   ChevronLeft,
   ChevronRight,
   Sparkles,
   Copy,
+  Check,
   MessageCircle,
+  Flame,
+  UserCheck,
+  ArrowRight,
 } from 'lucide-react';
 import { REPLY_TEMPLATES, fillTemplate } from '../constants/replyTemplates';
 
@@ -33,9 +35,12 @@ interface Note {
 interface ActivityItem {
   id: string;
   action: string;
-  from_value: string | null;
-  to_value: string | null;
-  admin_email: string | null;
+  from_value?: string | null;
+  to_value?: string | null;
+  fromValue?: string | null;
+  toValue?: string | null;
+  admin_email?: string | null;
+  adminEmail?: string | null;
   created_at: string;
 }
 
@@ -44,6 +49,9 @@ interface InquiryDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   onStatusChange: (id: string, newStatus: InquiryStatus) => Promise<void>;
+  onPriorityChange?: (id: string, newPriority: InquiryPriority) => Promise<void>;
+  onAssigneeChange?: (id: string, newAdminId: string | null) => Promise<void>;
+  onSelectInquiry?: (inquiry: Inquiry) => void;
   isUpdatingStatus: boolean;
   onNavigatePrev?: () => void;
   onNavigateNext?: () => void;
@@ -56,6 +64,9 @@ export const InquiryDrawer: React.FC<InquiryDrawerProps> = ({
   isOpen,
   onClose,
   onStatusChange,
+  onPriorityChange,
+  onAssigneeChange,
+  onSelectInquiry,
   isUpdatingStatus,
   onNavigatePrev,
   onNavigateNext,
@@ -67,14 +78,29 @@ export const InquiryDrawer: React.FC<InquiryDrawerProps> = ({
   const [activity, setActivity] = useState<ActivityItem[]>([]);
   const [newNote, setNewNote] = useState<string>('');
   const [isSubmittingNote, setIsSubmittingNote] = useState<boolean>(false);
-  const [isLoadingDetails, setIsLoadingDetails] = useState<boolean>(false);
+  const [detailedInquiry, setDetailedInquiry] = useState<Inquiry | null>(inquiry);
+  const [adminOptions, setAdminOptions] = useState<Assignee[]>([]);
+  const [isUpdatingPriority, setIsUpdatingPriority] = useState<boolean>(false);
+  const [isUpdatingAssignee, setIsUpdatingAssignee] = useState<boolean>(false);
+  const [copiedRef, setCopiedRef] = useState<boolean>(false);
 
   // Quick reply state
   const [customReplyText, setCustomReplyText] = useState<string>('');
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
 
+  // Fetch admin options once for assignment dropdown
+  useEffect(() => {
+    api
+      .get('/admins/options')
+      .then((res) => {
+        setAdminOptions(Array.isArray(res.data) ? res.data : []);
+      })
+      .catch(() => {});
+  }, []);
+
   useEffect(() => {
     if (isOpen && inquiry?.id) {
+      setDetailedInquiry(inquiry);
       loadInquiryDetails(inquiry.id);
       // Pre-select first template for inquiry category
       const available = REPLY_TEMPLATES[inquiry.category] || REPLY_TEMPLATES['General Query'];
@@ -91,7 +117,7 @@ export const InquiryDrawer: React.FC<InquiryDrawerProps> = ({
 
     const handleKeyDown = (e: KeyboardEvent) => {
       // Don't trigger if user is typing in textarea or input
-      if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement).tagName)) {
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement).tagName)) {
         if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
           e.preventDefault();
           handleAddNote();
@@ -113,16 +139,66 @@ export const InquiryDrawer: React.FC<InquiryDrawerProps> = ({
   }, [isOpen, hasNext, hasPrev, onNavigateNext, onNavigatePrev, onClose, newNote]);
 
   const loadInquiryDetails = async (id: string) => {
-    setIsLoadingDetails(true);
     try {
       const res = await api.get(`/inquiries/${id}`);
       const payload = res.data.data || res.data;
       if (payload.notes) setNotes(payload.notes);
       if (payload.activity) setActivity(payload.activity);
+      setDetailedInquiry(payload);
     } catch {
       // Handled silently
+    }
+  };
+
+  const handlePrioritySelect = async (newPriority: InquiryPriority) => {
+    if (!inquiry?.id || isUpdatingPriority) return;
+    setIsUpdatingPriority(true);
+    try {
+      await api.patch(`/inquiries/${inquiry.id}/priority`, { priority: newPriority });
+      setDetailedInquiry((prev) => (prev ? { ...prev, priority: newPriority } : null));
+      if (onPriorityChange) {
+        await onPriorityChange(inquiry.id, newPriority);
+      }
+      toast.success(`Priority updated to ${newPriority}`);
+      loadInquiryDetails(inquiry.id);
+    } catch {
+      toast.error('Failed to update priority');
     } finally {
-      setIsLoadingDetails(false);
+      setIsUpdatingPriority(false);
+    }
+  };
+
+  const handleAssigneeSelect = async (targetAdminId: string | null) => {
+    if (!inquiry?.id || isUpdatingAssignee) return;
+    setIsUpdatingAssignee(true);
+    try {
+      const res = await api.patch(`/inquiries/${inquiry.id}/assign`, { adminId: targetAdminId });
+      const updated = res.data.data || res.data;
+      setDetailedInquiry((prev) =>
+        prev ? { ...prev, assignedTo: targetAdminId, assignee: updated.assignee } : null
+      );
+      if (onAssigneeChange) {
+        await onAssigneeChange(inquiry.id, targetAdminId);
+      }
+      toast.success('Assignee updated successfully');
+      loadInquiryDetails(inquiry.id);
+    } catch {
+      toast.error('Failed to update assignee');
+    } finally {
+      setIsUpdatingAssignee(false);
+    }
+  };
+
+  const handleCopyRef = async () => {
+    const code = detailedInquiry?.referenceCode || detailedInquiry?.reference_code || inquiry?.referenceCode || inquiry?.reference_code;
+    if (!code) return;
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopiedRef(true);
+      toast.success('Reference code copied to clipboard');
+      setTimeout(() => setCopiedRef(false), 2000);
+    } catch {
+      toast.error('Could not copy reference code');
     }
   };
 
@@ -138,8 +214,8 @@ export const InquiryDrawer: React.FC<InquiryDrawerProps> = ({
       setNewNote('');
       toast.success('Internal note added (Ctrl+Enter)');
       loadInquiryDetails(inquiry.id);
-    } catch (err: any) {
-      toast.error(err.response?.data?.error?.message || 'Failed to add note');
+    } catch {
+      toast.error('Failed to add note');
     } finally {
       setIsSubmittingNote(false);
     }
@@ -162,12 +238,17 @@ export const InquiryDrawer: React.FC<InquiryDrawerProps> = ({
 
   if (!isOpen || !inquiry) return null;
 
-  const formattedDate = new Date(inquiry.created_at || inquiry.createdAt || '').toLocaleString('en-US', {
+  const currentItem = detailedInquiry || inquiry;
+  const currentPriority: InquiryPriority = currentItem.priority || 'Normal';
+  const referenceCode = currentItem.referenceCode || currentItem.reference_code;
+  const contactCount = currentItem.contactCount || currentItem.contact_count || 1;
+
+  const formattedDate = new Date(currentItem.created_at || currentItem.createdAt || '').toLocaleString('en-US', {
     dateStyle: 'medium',
     timeStyle: 'short',
   });
 
-  const digitsPhone = inquiry.phone.replace(/\D/g, '');
+  const digitsPhone = currentItem.phone.replace(/\D/g, '');
 
   const getStatusBadge = (status: InquiryStatus) => {
     switch (status) {
@@ -180,7 +261,7 @@ export const InquiryDrawer: React.FC<InquiryDrawerProps> = ({
     }
   };
 
-  const availableTemplates = REPLY_TEMPLATES[inquiry.category] || REPLY_TEMPLATES['General Query'] || [];
+  const availableTemplates = REPLY_TEMPLATES[currentItem.category] || REPLY_TEMPLATES['General Query'] || [];
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end" role="dialog" aria-modal="true">
@@ -231,17 +312,36 @@ export const InquiryDrawer: React.FC<InquiryDrawerProps> = ({
             </button>
           </div>
 
-          <div className="flex items-center gap-2 mb-1.5">
-            <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium border ${getStatusBadge(inquiry.status)}`}>
-              {inquiry.status}
+          <div className="flex items-center gap-2 mb-2 flex-wrap">
+            <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium border ${getStatusBadge(currentItem.status)}`}>
+              {currentItem.status}
             </span>
             <span className="text-xs px-2.5 py-0.5 rounded-full bg-white/5 border border-white/10 text-[#A3A3A3]">
-              {inquiry.category}
+              {currentItem.category}
             </span>
+            {referenceCode && (
+              <button
+                type="button"
+                onClick={handleCopyRef}
+                title="Click to copy tracking reference code"
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-mono text-xs bg-[#FFD60A]/10 text-[#FFD60A] border border-[#FFD60A]/30 hover:bg-[#FFD60A]/20 transition-colors"
+              >
+                <span>{referenceCode}</span>
+                {copiedRef ? <Check className="w-3 h-3 text-[#4ADE80]" /> : <Copy className="w-3 h-3 opacity-70" />}
+              </button>
+            )}
+            {contactCount > 1 && (
+              <span
+                title={`${contactCount} total submissions from this contact`}
+                className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-[#FFD60A]/20 text-[#FFD60A] border border-[#FFD60A]/30"
+              >
+                ×{contactCount} Repeat Contact
+              </span>
+            )}
           </div>
 
-          <h2 className="text-xl font-bold text-[#F5F5F5] truncate">{inquiry.name}</h2>
-          <p className="text-xs text-[#A3A3A3] mt-0.5 truncate">{inquiry.email}</p>
+          <h2 className="text-xl font-bold text-[#F5F5F5] truncate">{currentItem.name}</h2>
+          <p className="text-xs text-[#A3A3A3] mt-0.5 truncate">{currentItem.email}</p>
 
           {/* Navigation Tabs */}
           <div className="flex gap-2 mt-4 pt-3 border-t border-white/5">
@@ -266,20 +366,25 @@ export const InquiryDrawer: React.FC<InquiryDrawerProps> = ({
                   : 'text-[#A3A3A3] hover:text-[#F5F5F5] hover:bg-white/5'
               }`}
             >
-              <Sparkles className="w-3.5 h-3.5 text-[#FB923C]" />
+              <Sparkles className="w-3.5 h-3.5" />
               <span>Quick Reply</span>
             </button>
             <button
               type="button"
               onClick={() => setActiveTab('notes')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer relative ${
                 activeTab === 'notes'
                   ? 'bg-[#FFD60A] text-[#0A0A0A]'
                   : 'text-[#A3A3A3] hover:text-[#F5F5F5] hover:bg-white/5'
               }`}
             >
               <MessageSquare className="w-3.5 h-3.5" />
-              <span>Notes ({notes.length})</span>
+              <span>Notes</span>
+              {notes.length > 0 && (
+                <span className="ml-1 px-1.5 py-0.2 bg-white/20 text-[10px] rounded-full">
+                  {notes.length}
+                </span>
+              )}
             </button>
             <button
               type="button"
@@ -306,7 +411,7 @@ export const InquiryDrawer: React.FC<InquiryDrawerProps> = ({
                   <User className="w-3.5 h-3.5 text-[#FFD60A]" />
                   <span>User Type</span>
                 </div>
-                <p className="text-sm font-semibold text-[#F5F5F5]">{inquiry.user_type || inquiry.userType}</p>
+                <p className="text-sm font-semibold text-[#F5F5F5]">{currentItem.user_type || currentItem.userType}</p>
               </div>
 
               <div className="p-3.5 rounded-xl bg-white/[0.02] border border-white/5">
@@ -323,10 +428,10 @@ export const InquiryDrawer: React.FC<InquiryDrawerProps> = ({
                   <span>Email Address</span>
                 </div>
                 <a
-                  href={`mailto:${inquiry.email}`}
+                  href={`mailto:${currentItem.email}`}
                   className="text-sm font-medium text-[#FFD60A] hover:underline break-all"
                 >
-                  {inquiry.email}
+                  {currentItem.email}
                 </a>
               </div>
 
@@ -336,11 +441,72 @@ export const InquiryDrawer: React.FC<InquiryDrawerProps> = ({
                   <span>Phone Number</span>
                 </div>
                 <a
-                  href={`tel:${inquiry.phone}`}
+                  href={`tel:${currentItem.phone}`}
                   className="text-sm font-medium text-[#F5F5F5] hover:text-[#FFD60A]"
                 >
-                  {inquiry.phone}
+                  {currentItem.phone}
                 </a>
+              </div>
+            </div>
+
+            {/* Workflow Controls: Priority & Assignee */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Priority Selector */}
+              <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/10">
+                <label className="block text-xs uppercase tracking-wider text-[#A3A3A3] font-semibold mb-2">
+                  Priority Level
+                </label>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {(['Low', 'Normal', 'High', 'Urgent'] as InquiryPriority[]).map((p) => {
+                    const isSelected = currentPriority === p;
+                    return (
+                      <button
+                        key={p}
+                        type="button"
+                        disabled={isUpdatingPriority}
+                        onClick={() => handlePrioritySelect(p)}
+                        className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center justify-center gap-1 ${
+                          isSelected
+                            ? p === 'Urgent'
+                              ? 'bg-[#F87171] text-black shadow-sm font-bold'
+                              : p === 'High'
+                              ? 'bg-[#FB923C] text-black shadow-sm font-bold'
+                              : 'bg-[#FFD60A] text-black shadow-sm font-bold'
+                            : 'bg-white/5 hover:bg-white/10 text-[#A3A3A3] border border-white/5'
+                        }`}
+                      >
+                        {p === 'Urgent' && <Flame className="w-3 h-3" />}
+                        <span>{p}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Assignee Selector */}
+              <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/10">
+                <label className="block text-xs uppercase tracking-wider text-[#A3A3A3] font-semibold mb-2">
+                  Assigned Team Member
+                </label>
+                <select
+                  disabled={isUpdatingAssignee}
+                  value={currentItem.assignedTo || currentItem.assigned_to || ''}
+                  onChange={(e) => handleAssigneeSelect(e.target.value ? e.target.value : null)}
+                  className="w-full px-3 py-2 rounded-lg bg-[#141414] border border-white/10 text-xs text-[#F5F5F5] focus:outline-none focus:ring-1 focus:ring-[#FFD60A] cursor-pointer"
+                >
+                  <option value="">Unassigned</option>
+                  {adminOptions.map((adm) => (
+                    <option key={adm.id} value={adm.id}>
+                      {adm.name} ({adm.email})
+                    </option>
+                  ))}
+                </select>
+                {currentItem.assignee && (
+                  <div className="flex items-center gap-1.5 mt-2 text-[11px] text-[#A3A3A3]">
+                    <UserCheck className="w-3.5 h-3.5 text-[#4ADE80]" />
+                    <span>Active: {currentItem.assignee.name}</span>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -350,9 +516,61 @@ export const InquiryDrawer: React.FC<InquiryDrawerProps> = ({
                 Inquiry Message
               </h3>
               <div className="p-4 rounded-xl bg-[#141414] border border-white/10 text-sm text-[#F5F5F5] leading-relaxed whitespace-pre-wrap">
-                {inquiry.message}
+                {currentItem.message}
               </div>
             </div>
+
+            {/* Related Inquiries from Same Contact */}
+            {currentItem.related && currentItem.related.length > 0 && (
+              <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 space-y-2.5">
+                <div className="flex items-center justify-between text-xs text-[#A3A3A3] uppercase tracking-wider font-semibold">
+                  <span>Related Inquiries ({currentItem.related.length})</span>
+                  <span className="text-[10px] text-[#737373] lowercase">same email/phone</span>
+                </div>
+                <div className="space-y-2">
+                  {currentItem.related.map((rel: RelatedInquiry) => (
+                    <div
+                      key={rel.id}
+                      onClick={() => {
+                        if (onSelectInquiry) {
+                          onSelectInquiry({
+                            ...currentItem,
+                            id: rel.id,
+                            category: rel.category,
+                            status: rel.status,
+                            priority: rel.priority,
+                            referenceCode: rel.referenceCode || rel.reference_code,
+                            createdAt: rel.createdAt || rel.created_at,
+                          });
+                        }
+                      }}
+                      className="p-2.5 rounded-lg bg-[#141414] hover:bg-white/5 border border-white/5 transition-colors cursor-pointer flex items-center justify-between text-xs"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-[#FFD60A] text-[11px]">
+                          {rel.referenceCode || rel.reference_code || 'KH-REF'}
+                        </span>
+                        <span className="text-[#F5F5F5] font-medium">{rel.category}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`px-1.5 py-0.2 rounded text-[10px] font-semibold ${
+                            rel.status === 'Resolved'
+                              ? 'text-[#4ADE80]'
+                              : rel.status === 'In Progress'
+                              ? 'text-[#FB923C]'
+                              : 'text-[#FFD60A]'
+                          }`}
+                        >
+                          {rel.status}
+                        </span>
+                        <ArrowRight className="w-3.5 h-3.5 text-[#737373]" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Status Change Control */}
             <div className="p-4 rounded-xl bg-white/[0.03] border border-white/10">
@@ -363,15 +581,15 @@ export const InquiryDrawer: React.FC<InquiryDrawerProps> = ({
                 {(['New', 'In Progress', 'Resolved'] as InquiryStatus[]).map((status) => (
                   <button
                     key={status}
-                    disabled={isUpdatingStatus || inquiry.status === status}
-                    onClick={() => onStatusChange(inquiry.id, status)}
+                    disabled={isUpdatingStatus || currentItem.status === status}
+                    onClick={() => onStatusChange(currentItem.id, status)}
                     className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                      inquiry.status === status
+                      currentItem.status === status
                         ? 'bg-[#FFD60A] text-[#0A0A0A] shadow-sm font-bold'
                         : 'bg-[#171717] hover:bg-white/10 text-[#F5F5F5] border border-white/10'
                     }`}
                   >
-                    {isUpdatingStatus && inquiry.status === status && (
+                    {isUpdatingStatus && currentItem.status === status && (
                       <RefreshCw className="w-3 h-3 animate-spin" />
                     )}
                     {status}
@@ -387,7 +605,7 @@ export const InquiryDrawer: React.FC<InquiryDrawerProps> = ({
           <div className="p-6 space-y-5 flex-1 flex flex-col">
             <div>
               <label className="block text-xs font-semibold text-[#A3A3A3] uppercase tracking-wider mb-2">
-                Select Canned Response ({inquiry.category})
+                Select Canned Response ({currentItem.category})
               </label>
               <div className="flex flex-wrap gap-2">
                 {availableTemplates.map((tmpl) => (
@@ -420,32 +638,32 @@ export const InquiryDrawer: React.FC<InquiryDrawerProps> = ({
               />
             </div>
 
-            {/* Quick Actions for Reply */}
-            <div className="grid grid-cols-3 gap-2 pt-2 border-t border-white/5">
+            {/* Dispatch Action Buttons */}
+            <div className="grid grid-cols-3 gap-2 pt-2">
               <button
                 type="button"
                 onClick={copyReplyText}
-                className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-white/5 hover:bg-white/10 text-[#F5F5F5] text-xs font-medium border border-white/10 transition-colors cursor-pointer"
+                className="py-2.5 px-3 rounded-xl bg-white/5 hover:bg-white/10 text-[#F5F5F5] font-semibold text-xs border border-white/10 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 <Copy className="w-3.5 h-3.5" />
-                <span>Copy Text</span>
+                <span>Copy</span>
               </button>
 
               <a
-                href={`mailto:${inquiry.email}?subject=${encodeURIComponent(
-                  `K12 Hunar: Regarding your ${inquiry.category} inquiry`
+                href={`mailto:${currentItem.email}?subject=${encodeURIComponent(
+                  `K12 Hunar: Regarding your inquiry (${currentItem.category})`
                 )}&body=${encodeURIComponent(customReplyText)}`}
-                className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-[#60A5FA]/15 hover:bg-[#60A5FA]/25 text-[#60A5FA] border border-[#60A5FA]/30 text-xs font-semibold transition-colors"
+                className="py-2.5 px-3 rounded-xl bg-[#FFD60A] hover:bg-[#FFE14D] text-[#0A0A0A] font-bold text-xs transition-all flex items-center justify-center gap-1.5"
               >
                 <Mail className="w-3.5 h-3.5" />
-                <span>Open Email</span>
+                <span>Email Client</span>
               </a>
 
               <a
                 href={`https://wa.me/${digitsPhone}?text=${encodeURIComponent(customReplyText)}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-[#22C55E]/15 hover:bg-[#22C55E]/25 text-[#22C55E] border border-[#22C55E]/30 text-xs font-semibold transition-colors"
+                className="py-2.5 px-3 rounded-xl bg-[#22C55E] hover:bg-[#16A34A] text-white font-bold text-xs transition-all flex items-center justify-center gap-1.5"
               >
                 <MessageCircle className="w-3.5 h-3.5" />
                 <span>WhatsApp</span>
@@ -454,63 +672,43 @@ export const InquiryDrawer: React.FC<InquiryDrawerProps> = ({
           </div>
         )}
 
-        {/* Tab 3: Internal Notes with Ctrl+Enter */}
+        {/* Tab 3: Internal Notes */}
         {activeTab === 'notes' && (
-          <div className="p-6 space-y-6 flex-1 flex flex-col">
-            <form onSubmit={handleAddNote} className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label
-                  htmlFor="new-note-input"
-                  className="block text-xs font-semibold text-[#A3A3A3] uppercase tracking-wider"
-                >
-                  Add Private Internal Note
-                </label>
-                <span className="text-[10px] text-[#A3A3A3]/70">Press Ctrl+Enter to save</span>
-              </div>
+          <div className="p-6 space-y-5 flex-1 flex flex-col">
+            <form onSubmit={handleAddNote} className="space-y-3">
+              <label className="block text-xs font-semibold text-[#A3A3A3] uppercase tracking-wider">
+                Add Counselor Note <span className="text-[10px] text-[#737373] lowercase">(Ctrl+Enter to save)</span>
+              </label>
               <textarea
-                id="new-note-input"
                 rows={3}
+                placeholder="Log internal conversation, phone follow-up notes, or next steps..."
                 value={newNote}
                 onChange={(e) => setNewNote(e.target.value)}
-                placeholder="Log internal updates, callback notes, counselor assignment..."
-                className="w-full px-3.5 py-2.5 dark-input text-xs rounded-xl resize-none"
+                className="w-full p-3 dark-input text-xs rounded-xl resize-none"
               />
-              <div className="flex justify-end">
-                <button
-                  type="submit"
-                  disabled={isSubmittingNote || !newNote.trim()}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#FFD60A] text-[#0A0A0A] font-bold text-xs hover:bg-[#FFE14D] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                >
-                  {isSubmittingNote ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
-                  <span>Save Note</span>
-                </button>
-              </div>
+              <button
+                type="submit"
+                disabled={isSubmittingNote || !newNote.trim()}
+                className="w-full py-2 px-3 rounded-xl bg-[#FFD60A] hover:bg-[#FFE14D] text-[#0A0A0A] font-bold text-xs shadow-md transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 cursor-pointer"
+              >
+                {isSubmittingNote ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                <span>Save Internal Note</span>
+              </button>
             </form>
 
-            <div className="space-y-3 flex-1 overflow-y-auto">
-              <div className="flex items-center justify-between">
-                <h4 className="text-xs font-semibold text-[#A3A3A3] uppercase tracking-wider">
-                  Note History ({notes.length})
-                </h4>
-                {isLoadingDetails && <RefreshCw className="w-3 h-3 animate-spin text-[#FFD60A]" />}
-              </div>
-              {isLoadingDetails && notes.length === 0 ? (
-                <div className="p-6 text-center text-xs text-[#A3A3A3]">Loading notes...</div>
-              ) : notes.length === 0 ? (
-                <div className="p-6 text-center text-xs text-[#A3A3A3] border border-dashed border-white/10 rounded-xl">
-                  No internal notes recorded yet. Add one above!
+            <div className="flex-1 overflow-y-auto space-y-3 pt-2">
+              {notes.length === 0 ? (
+                <div className="text-center py-10 text-xs text-[#737373]">
+                  No internal notes recorded yet.
                 </div>
               ) : (
                 notes.map((n) => (
-                  <div key={n.id} className="p-3.5 rounded-xl bg-[#141414] border border-white/5 space-y-1.5">
+                  <div key={n.id} className="p-3.5 rounded-xl bg-[#141414] border border-white/5 space-y-1.5 text-xs">
                     <div className="flex items-center justify-between text-[11px] text-[#A3A3A3]">
-                      <span className="text-[#FFD60A] font-medium flex items-center gap-1">
-                        <ShieldCheck className="w-3 h-3" />
-                        {n.admin_email}
-                      </span>
+                      <span className="font-semibold text-[#F5F5F5]">{n.admin_email}</span>
                       <span>{new Date(n.created_at).toLocaleString()}</span>
                     </div>
-                    <p className="text-xs text-[#F5F5F5] leading-relaxed whitespace-pre-wrap">{n.note}</p>
+                    <p className="text-[#D4D4D4] whitespace-pre-wrap">{n.note}</p>
                   </div>
                 ))
               )}
@@ -518,55 +716,48 @@ export const InquiryDrawer: React.FC<InquiryDrawerProps> = ({
           </div>
         )}
 
-        {/* Tab 4: Activity Audit Timeline */}
+        {/* Tab 4: Audit History */}
         {activeTab === 'activity' && (
-          <div className="p-6 space-y-4 flex-1 overflow-y-auto">
-            <h4 className="text-xs font-semibold text-[#A3A3A3] uppercase tracking-wider mb-2">
-              System Audit Timeline
-            </h4>
+          <div className="p-6 flex-1 overflow-y-auto space-y-4">
+            <h3 className="text-xs font-semibold text-[#A3A3A3] uppercase tracking-wider mb-2">
+              Audit Trail & Timeline
+            </h3>
             {activity.length === 0 ? (
-              <div className="p-6 text-center text-xs text-[#A3A3A3] border border-dashed border-white/10 rounded-xl">
-                No activity recorded yet.
+              <div className="text-center py-10 text-xs text-[#737373]">
+                No logged activity yet.
               </div>
             ) : (
-              <div className="relative pl-6 space-y-6 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-white/10">
-                {activity.map((act) => (
-                  <div key={act.id} className="relative">
-                    <span className="absolute -left-6 top-1 w-2.5 h-2.5 rounded-full bg-[#FFD60A] ring-4 ring-[#0F0F0F]" />
-                    <div className="text-xs font-semibold text-[#F5F5F5]">
-                      {act.action === 'created'
-                        ? 'Inquiry Created via Public Form'
-                        : act.action === 'status_changed'
-                        ? `Status changed from "${act.from_value}" to "${act.to_value}"`
-                        : act.action === 'note_added'
-                        ? `Added internal note: "${act.to_value}"`
-                        : act.action}
-                    </div>
-                    <div className="flex items-center gap-2 text-[11px] text-[#A3A3A3] mt-0.5">
-                      {act.admin_email && <span>By {act.admin_email}</span>}
-                      <span>•</span>
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
+              <div className="relative border-l border-white/10 ml-3 space-y-5">
+                {activity.map((act) => {
+                  const fromVal = act.fromValue || act.from_value;
+                  const toVal = act.toValue || act.to_value;
+                  const admEmail = act.adminEmail || act.admin_email;
+
+                  return (
+                    <div key={act.id} className="relative pl-6">
+                      <div className="absolute -left-1.5 top-1.5 w-3 h-3 rounded-full bg-[#FFD60A] ring-4 ring-[#0F0F0F]" />
+                      <div className="text-xs font-semibold text-[#F5F5F5] flex items-center gap-1.5">
+                        <span className="capitalize">{act.action.replace('_', ' ')}</span>
+                        {fromVal && toVal && (
+                          <span className="text-[11px] text-[#A3A3A3]">
+                            ({fromVal} → <span className="text-[#FFD60A] font-bold">{toVal}</span>)
+                          </span>
+                        )}
+                        {!fromVal && toVal && (
+                          <span className="text-[11px] text-[#FFD60A] font-bold">({toVal})</span>
+                        )}
+                      </div>
+                      <div className="text-[10px] text-[#737373] mt-0.5">
+                        {admEmail ? `by ${admEmail}` : 'Public submission'} •{' '}
                         {new Date(act.created_at).toLocaleString()}
-                      </span>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
         )}
-
-        {/* Footer */}
-        <div className="p-4 border-t border-white/10 bg-[#141414]/50 flex justify-between items-center">
-          <span className="text-[11px] text-[#A3A3A3]">ID: {inquiry.id.slice(0, 8)}...</span>
-          <button
-            onClick={onClose}
-            className="px-4 py-2 rounded-xl text-xs font-medium text-[#A3A3A3] hover:text-[#F5F5F5] hover:bg-white/5 transition-colors cursor-pointer"
-          >
-            Close Details
-          </button>
-        </div>
       </div>
     </div>
   );

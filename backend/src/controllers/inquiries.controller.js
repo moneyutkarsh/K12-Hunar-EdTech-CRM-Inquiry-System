@@ -3,6 +3,8 @@ import {
   getInquiriesList,
   getInquiryDetails,
   changeInquiryStatus,
+  changeInquiryPriority,
+  changeInquiryAssignee,
   addInquiryNote,
 } from '../services/inquiries.service.js';
 import { listNotesByInquiryId } from '../repositories/notes.repo.js';
@@ -24,7 +26,10 @@ export async function create(req, res) {
 }
 
 export async function list(req, res) {
-  const result = await getInquiriesList(req.query);
+  const result = await getInquiriesList({
+    ...req.query,
+    currentAdminId: req.admin?.id,
+  });
   return res.status(200).json(result);
 }
 
@@ -40,6 +45,22 @@ export async function updateStatus(req, res) {
   return res.status(200).json({
     data: result,
     message: 'Status updated successfully',
+  });
+}
+
+export async function updatePriority(req, res) {
+  const result = await changeInquiryPriority(req.params.id, req.body.priority, req.admin.id);
+  return res.status(200).json({
+    data: result,
+    message: 'Priority updated successfully',
+  });
+}
+
+export async function updateAssignee(req, res) {
+  const result = await changeInquiryAssignee(req.params.id, req.body.adminId, req.admin.id);
+  return res.status(200).json({
+    data: result,
+    message: 'Assignee updated successfully',
   });
 }
 

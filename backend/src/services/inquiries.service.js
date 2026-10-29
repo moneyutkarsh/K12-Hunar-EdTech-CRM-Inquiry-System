@@ -5,7 +5,10 @@ import {
   listInquiries as repoListInquiries,
   findInquiryById,
   updateInquiryStatus as repoUpdateStatus,
+  updateInquiryPriority as repoUpdatePriority,
+  updateInquiryAssignee as repoUpdateAssignee,
 } from '../repositories/inquiries.repo.js';
+import { findAdminById } from '../repositories/admins.repo.js';
 import { logActivity, listActivityByInquiryId } from '../repositories/activity.repo.js';
 import { createNote, listNotesByInquiryId } from '../repositories/notes.repo.js';
 import { normalizePhone } from '../utils/phone.js';
@@ -99,6 +102,8 @@ export async function getInquiriesList(queryParams) {
       category: queryParams.category || null,
       userType: queryParams.userType || null,
       status: queryParams.status || null,
+      priority: queryParams.priority || null,
+      assignedTo: queryParams.assignedTo || null,
       search: queryParams.search || null,
       from: queryParams.from || null,
       to: queryParams.to || null,
@@ -149,6 +154,59 @@ export async function changeInquiryStatus(id, newStatus, adminId) {
   return updated;
 }
 
+export async function changeInquiryPriority(id, newPriority, adminId) {
+  const current = await findInquiryById(id);
+  if (!current) {
+    throw HttpError.notFound('Inquiry record not found');
+  }
+
+  if (current.priority === newPriority) {
+    return current;
+  }
+
+  const updated = await repoUpdatePriority(id, newPriority);
+
+  await logActivity({
+    inquiryId: id,
+    adminId,
+    action: 'priority_changed',
+    fromValue: current.priority,
+    toValue: newPriority,
+  });
+
+  return updated;
+}
+
+export async function changeInquiryAssignee(id, newAdminId, adminId) {
+  const current = await findInquiryById(id);
+  if (!current) {
+    throw HttpError.notFound('Inquiry record not found');
+  }
+
+  if (current.assignedTo === newAdminId) {
+    return current;
+  }
+
+  if (newAdminId) {
+    const targetAdmin = await findAdminById(newAdminId);
+    if (!targetAdmin) {
+      throw HttpError.badRequest('Assigned admin does not exist');
+    }
+  }
+
+  const updated = await repoUpdateAssignee(id, newAdminId);
+
+  await logActivity({
+    inquiryId: id,
+    adminId,
+    action: 'assigned',
+    fromValue: current.assignee ? current.assignee.name : 'Unassigned',
+    toValue: updated.assignee ? updated.assignee.name : 'Unassigned',
+  });
+
+  return updated;
+}
+
 export async function addInquiryNote(inquiryId, adminId, noteText) {
   const inquiry = await findInquiryById(inquiryId);
   if (!inquiry) {
@@ -173,5 +231,7 @@ export default {
   getInquiriesList,
   getInquiryDetails,
   changeInquiryStatus,
+  changeInquiryPriority,
+  changeInquiryAssignee,
   addInquiryNote,
 };

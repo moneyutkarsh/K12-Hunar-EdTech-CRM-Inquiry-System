@@ -44,3 +44,21 @@ export async function upsertAdmin({ email, passwordHash, role = 'admin' }) {
   const result = await query(sql, [email.toLowerCase().trim(), passwordHash, role]);
   return result.rows[0];
 }
+
+export async function listAdminOptions() {
+  const sql = `
+    SELECT id, name, email, avatar_url, role
+    FROM admins
+    WHERE is_active = true
+    ORDER BY name ASC, email ASC
+  `;
+  const result = await query(sql);
+  return result.rows.map((r) => ({
+    id: r.id,
+    name: r.name || r.email.split('@')[0],
+    email: r.email,
+    avatarUrl: r.avatar_url || null,
+    role: r.role,
+  }));
+}
+
