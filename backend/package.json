@@ -8,6 +8,7 @@
     "dev": "node --watch src/server.js",
     "seed:admin": "node src/scripts/seedAdmin.js",
     "seed:inquiries": "node src/scripts/seedInquiries.js",
+    "seed:history": "node src/scripts/seedHistory.js",
     "test": "vitest run",
     "test:smoke": "node src/scripts/smoke.mjs"
   },
