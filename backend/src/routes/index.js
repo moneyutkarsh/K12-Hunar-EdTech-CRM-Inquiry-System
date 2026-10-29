@@ -1,19 +1,20 @@
 import { Router } from 'express';
+import swaggerUi from 'swagger-ui-express';
+import healthRoutes from './health.routes.js';
 import authRoutes from './auth.routes.js';
-import inquiryRoutes from './inquiry.routes.js';
+import inquiriesRoutes from './inquiries.routes.js';
+import openapiSpec from '../docs/openapi.js';
 
 const router = Router();
 
-// Health check endpoint (used by Render and frontend warm-up)
-router.get('/health', (req, res) => {
-  res.status(200).json({
-    status: 'ok',
-    timestamp: new Date().toISOString(),
-  });
-});
+// 1. Health Endpoint
+router.use('/health', healthRoutes);
 
-// Mount modular sub-routes
+// 2. Swagger Documentation UI
+router.use('/docs', swaggerUi.serve, swaggerUi.setup(openapiSpec, { customSiteTitle: 'K12 Hunar CRM API Docs' }));
+
+// 3. Sub-routes
 router.use('/auth', authRoutes);
-router.use('/inquiries', inquiryRoutes);
+router.use('/inquiries', inquiriesRoutes);
 
 export default router;
