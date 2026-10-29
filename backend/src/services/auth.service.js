@@ -3,7 +3,14 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { config } from '../config/env.js';
 import { HttpError } from '../utils/httpError.js';
-import { findAdminByEmail, updateAdminLastLogin, upsertAdmin } from '../repositories/admins.repo.js';
+import {
+  findAdminByEmail,
+  updateAdminLastLogin,
+  upsertAdmin,
+  findAdminWithPasswordById,
+  updateAdminPassword,
+  incrementAdminTokenVersion,
+} from '../repositories/admins.repo.js';
 import { checkLockout, logAttempt } from './loginAttempts.service.js';
 
 // Precomputed bcrypt cost 12 dummy hash for constant-time comparisons
@@ -32,12 +39,13 @@ export async function loginAdmin({ email, password, clientIp }) {
   await logAttempt(normalizedEmail, ipHash, true);
   await updateAdminLastLogin(admin.id);
 
-  // 5. Generate secure HS256 JWT with explicit claims
+  // 5. Generate secure HS256 JWT with explicit claims including token_version
   const jti = crypto.randomUUID();
   const payload = {
     sub: admin.id,
     email: admin.email,
     role: admin.role,
+    tv: admin.token_version || 1,
     jti,
   };
 
@@ -56,8 +64,10 @@ export async function loginAdmin({ email, password, clientIp }) {
     expiresAt,
     admin: {
       id: admin.id,
+      name: admin.name || admin.email.split('@')[0],
       email: admin.email,
       role: admin.role,
+      tokenVersion: admin.token_version || 1,
     },
   };
 }
@@ -78,6 +88,7 @@ export async function registerAdmin({ email, password }) {
     sub: newAdmin.id,
     email: newAdmin.email,
     role: newAdmin.role,
+    tv: newAdmin.token_version || 1,
     jti,
   };
 
@@ -96,10 +107,71 @@ export async function registerAdmin({ email, password }) {
     expiresAt,
     admin: {
       id: newAdmin.id,
+      name: newAdmin.email.split('@')[0],
       email: newAdmin.email,
       role: newAdmin.role,
+      tokenVersion: newAdmin.token_version || 1,
     },
   };
 }
 
-export default { loginAdmin, registerAdmin };
+export async function changeAdminPassword({ adminId, currentPassword, newPassword }) {
+  const admin = await findAdminWithPasswordById(adminId);
+  if (!admin || !admin.is_active) {
+    throw HttpError.unauthorized('Admin account not found or deactivated.');
+  }
+
+  const isMatch = await bcrypt.compare(currentPassword, admin.password_hash);
+  if (!isMatch) {
+    throw HttpError.badRequest('Current password is incorrect.');
+  }
+
+  if (currentPassword === newPassword) {
+    throw HttpError.badRequest('New password must be different from current password.');
+  }
+
+  const salt = await bcrypt.genSalt(10);
+  const newHash = await bcrypt.hash(newPassword, salt);
+  const updated = await updateAdminPassword(adminId, newHash);
+
+  // Generate a fresh JWT with the incremented token_version
+  const jti = crypto.randomUUID();
+  const payload = {
+    sub: admin.id,
+    email: admin.email,
+    role: admin.role,
+    tv: updated.token_version,
+    jti,
+  };
+
+  const token = jwt.sign(payload, config.JWT_SECRET, {
+    algorithm: 'HS256',
+    expiresIn: config.JWT_EXPIRES_IN,
+    issuer: config.JWT_ISSUER,
+    audience: config.JWT_AUDIENCE,
+  });
+
+  const decoded = jwt.decode(token);
+  const expiresAt = new Date(decoded.exp * 1000).toISOString();
+
+  return {
+    message: 'Password changed successfully. All other sessions have been revoked.',
+    token,
+    expiresAt,
+    tokenVersion: updated.token_version,
+  };
+}
+
+export async function logoutAllSessions(adminId) {
+  const updated = await incrementAdminTokenVersion(adminId);
+  if (!updated) {
+    throw HttpError.notFound('Admin account not found.');
+  }
+  return {
+    message: 'All active sessions have been invalidated.',
+    tokenVersion: updated.token_version,
+  };
+}
+
+export default { loginAdmin, registerAdmin, changeAdminPassword, logoutAllSessions };
+

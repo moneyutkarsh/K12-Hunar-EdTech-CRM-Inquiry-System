@@ -2,7 +2,7 @@ import { query } from '../config/db.js';
 
 export async function findAdminByEmail(email) {
   const sql = `
-    SELECT id, email, password_hash, role, is_active, last_login_at, created_at
+    SELECT id, name, email, password_hash, role, is_active, last_login_at, created_at, token_version
     FROM admins
     WHERE LOWER(email) = LOWER($1)
     LIMIT 1
@@ -13,10 +13,44 @@ export async function findAdminByEmail(email) {
 
 export async function findAdminById(id) {
   const sql = `
-    SELECT id, email, role, is_active, last_login_at, created_at
+    SELECT id, name, email, role, is_active, last_login_at, created_at, token_version
     FROM admins
     WHERE id = $1
     LIMIT 1
+  `;
+  const result = await query(sql, [id]);
+  return result.rows[0] || null;
+}
+
+export async function findAdminWithPasswordById(id) {
+  const sql = `
+    SELECT id, name, email, password_hash, role, is_active, token_version
+    FROM admins
+    WHERE id = $1
+    LIMIT 1
+  `;
+  const result = await query(sql, [id]);
+  return result.rows[0] || null;
+}
+
+export async function updateAdminPassword(id, passwordHash) {
+  const sql = `
+    UPDATE admins
+    SET password_hash = $2,
+        token_version = GREATEST(COALESCE(token_version, 0), 1) + 1
+    WHERE id = $1
+    RETURNING id, email, token_version
+  `;
+  const result = await query(sql, [id, passwordHash]);
+  return result.rows[0] || null;
+}
+
+export async function incrementAdminTokenVersion(id) {
+  const sql = `
+    UPDATE admins
+    SET token_version = GREATEST(COALESCE(token_version, 0), 1) + 1
+    WHERE id = $1
+    RETURNING id, token_version
   `;
   const result = await query(sql, [id]);
   return result.rows[0] || null;
@@ -35,11 +69,11 @@ export async function updateAdminLastLogin(id) {
 
 export async function upsertAdmin({ email, passwordHash, role = 'admin' }) {
   const sql = `
-    INSERT INTO admins (email, password_hash, role, is_active)
-    VALUES (LOWER($1), $2, $3, true)
+    INSERT INTO admins (email, password_hash, role, is_active, token_version)
+    VALUES (LOWER($1), $2, $3, true, 1)
     ON CONFLICT (email)
     DO UPDATE SET password_hash = EXCLUDED.password_hash, role = EXCLUDED.role, is_active = true
-    RETURNING id, email, role
+    RETURNING id, email, role, token_version
   `;
   const result = await query(sql, [email.toLowerCase().trim(), passwordHash, role]);
   return result.rows[0];

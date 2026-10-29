@@ -34,10 +34,20 @@ export async function auth(req, res, next) {
       return next(new HttpError(403, 'ACCOUNT_DEACTIVATED', 'This admin account has been deactivated.'));
     }
 
+    // Verify token version has not been revoked
+    const dbTokenVersion = admin.token_version || 1;
+    const tokenVersionInJwt = decoded.tv !== undefined ? decoded.tv : 1;
+    if (tokenVersionInJwt !== dbTokenVersion) {
+      return next(new HttpError(401, 'REVOKED_TOKEN', 'Session has been invalidated. Please sign in again.'));
+    }
+
     req.admin = {
       id: admin.id,
+      name: admin.name || admin.email.split('@')[0],
       email: admin.email,
       role: admin.role,
+      tokenVersion: dbTokenVersion,
+      createdAt: admin.created_at,
     };
 
     next();

@@ -1,4 +1,9 @@
-import { loginAdmin, registerAdmin } from '../services/auth.service.js';
+import {
+  loginAdmin,
+  registerAdmin,
+  changeAdminPassword,
+  logoutAllSessions,
+} from '../services/auth.service.js';
 
 export async function login(req, res) {
   const { email, password } = req.body;
@@ -40,4 +45,26 @@ export async function getMe(req, res) {
   });
 }
 
-export default { login, signup, getMe };
+export async function changePassword(req, res) {
+  const { currentPassword, newPassword } = req.body;
+  const result = await changeAdminPassword({
+    adminId: req.admin.id,
+    currentPassword,
+    newPassword,
+  });
+
+  return res.status(200).json({
+    message: result.message,
+    token: result.token,
+    expiresAt: result.expiresAt,
+    tokenVersion: result.tokenVersion,
+  });
+}
+
+export async function logoutAll(req, res) {
+  const result = await logoutAllSessions(req.admin.id);
+  return res.status(200).json(result);
+}
+
+export default { login, signup, getMe, changePassword, logoutAll };
+

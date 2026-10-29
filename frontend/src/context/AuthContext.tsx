@@ -1,9 +1,13 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { api } from '../lib/api';
 
-interface AdminUser {
+export interface AdminUser {
   id: string;
   email: string;
+  name?: string;
+  role?: string;
+  tokenVersion?: number;
+  createdAt?: string;
 }
 
 interface AuthContextType {
