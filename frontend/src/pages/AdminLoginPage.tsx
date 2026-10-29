@@ -15,14 +15,6 @@ const authFormSchema = z.object({
 
 type AuthFormData = z.infer<typeof authFormSchema>;
 
-const SSO_ACCOUNTS = [
-  { name: 'Utkarsh Dubey', email: 'moneyutkarsh@gmail.com', role: 'Superadmin', initials: 'UD' },
-  { name: 'TK Admin', email: 'tk@gmail.com', role: 'Administrator', initials: 'TK' },
-  { name: 'Lead Administrator', email: 'admin@k12hunar.com', role: 'Superadmin', initials: 'LA' },
-  { name: 'Priya Sharma', email: 'priya@k12hunar.com', role: 'Admissions Head', initials: 'PS' },
-  { name: 'Rahul Mehta', email: 'rahul@k12hunar.com', role: 'Scholarship Lead', initials: 'RM' },
-];
-
 export const AdminLoginPage: React.FC = () => {
   const { isAuthenticated, login } = useAuth();
   const navigate = useNavigate();
@@ -419,68 +411,51 @@ export const AdminLoginPage: React.FC = () => {
                 </button>
               </div>
 
-              {/* Seeded Instant Accounts */}
-              <div className="space-y-2">
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-[#A3A3A3]">
-                  Select verified administrator account:
-                </p>
-                <div className="space-y-1.5 max-h-56 overflow-y-auto pr-1">
-                  {SSO_ACCOUNTS.map((acc) => (
-                    <button
-                      key={acc.email}
-                      type="button"
-                      disabled={isSsoLoading}
-                      onClick={() => handleOAuthLogin(ssoModal, acc.email, acc.name)}
-                      className="w-full p-2.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] active:bg-white/[0.02] border border-white/10 flex items-center justify-between transition-all group text-left cursor-pointer"
-                    >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-8 h-8 rounded-full bg-[#FFD60A]/15 border border-[#FFD60A]/30 text-[#FFD60A] flex items-center justify-center font-bold text-xs shrink-0 group-hover:scale-105 transition-transform">
-                          {acc.initials}
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-xs font-bold text-[#F5F5F5] group-hover:text-[#FFD60A] truncate transition-colors">
-                            {acc.name}
-                          </p>
-                          <p className="text-[10px] text-[#A3A3A3] font-mono truncate">{acc.email}</p>
-                        </div>
-                      </div>
-                      <span className="text-[9px] px-2 py-0.5 rounded bg-white/5 text-[#A3A3A3] font-medium shrink-0">
-                        {acc.role}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Custom Institutional Email */}
-              <div className="pt-2 border-t border-white/10 space-y-2">
-                <label htmlFor="custom-sso" className="block text-[11px] font-semibold uppercase tracking-wider text-[#A3A3A3]">
-                  Or enter another institutional email:
-                </label>
-                <div className="flex gap-2">
+              {/* Institutional Email Form */}
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (customSsoEmail.trim()) {
+                    handleOAuthLogin(ssoModal, customSsoEmail.trim());
+                  }
+                }}
+                className="space-y-4 pt-1"
+              >
+                <div>
+                  <label htmlFor="custom-sso" className="block text-xs font-semibold uppercase tracking-wider text-[#A3A3A3] mb-1.5">
+                    {ssoModal === 'google' ? 'Google / Workspace Email' : 'Microsoft 365 / School Email'}
+                  </label>
                   <input
                     id="custom-sso"
                     type="email"
+                    autoFocus
                     placeholder={ssoModal === 'google' ? 'counselor@school.edu' : 'counselor@k12hunar.com'}
                     value={customSsoEmail}
                     onChange={(e) => setCustomSsoEmail(e.target.value)}
                     disabled={isSsoLoading}
-                    className="flex-1 px-3 py-2 dark-input text-xs rounded-xl"
+                    className="w-full px-3.5 py-2.5 dark-input text-sm rounded-xl"
+                    required
                   />
-                  <button
-                    type="button"
-                    disabled={isSsoLoading || !customSsoEmail.trim()}
-                    onClick={() => handleOAuthLogin(ssoModal, customSsoEmail.trim())}
-                    className="px-4 py-2 rounded-xl bg-[#FFD60A] hover:bg-[#FFE14D] text-[#0A0A0A] font-bold text-xs disabled:opacity-40 transition-all flex items-center gap-1.5 cursor-pointer shrink-0"
-                  >
-                    {isSsoLoading ? (
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    ) : (
-                      <span>Sign In</span>
-                    )}
-                  </button>
+                  <p className="text-[11px] text-[#A3A3A3] mt-1.5">
+                    Enter your organization's registered administrator email address to authenticate.
+                  </p>
                 </div>
-              </div>
+
+                <button
+                  type="submit"
+                  disabled={isSsoLoading || !customSsoEmail.trim()}
+                  className="w-full py-3 px-4 rounded-xl bg-[#FFD60A] hover:bg-[#FFE14D] text-[#0A0A0A] font-bold text-xs disabled:opacity-40 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md"
+                >
+                  {isSsoLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Authenticating with {ssoModal === 'google' ? 'Google' : 'Microsoft'}...</span>
+                    </>
+                  ) : (
+                    <span>Continue with {ssoModal === 'google' ? 'Google' : 'Microsoft 365'}</span>
+                  )}
+                </button>
+              </form>
 
               {/* Security info note */}
               <p className="text-[10px] text-white/40 text-center leading-relaxed">
