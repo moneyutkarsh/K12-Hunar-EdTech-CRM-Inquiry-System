@@ -14,6 +14,11 @@ import NeedsAttentionStrip from '../components/NeedsAttentionStrip';
 import SecondaryKpiRow from '../components/SecondaryKpiRow';
 import ShortcutsModal from '../components/ShortcutsModal';
 import {
+  getStoredBackgroundSetting,
+  setStoredBackgroundSetting,
+  type BackgroundSetting,
+} from '../utils/backgroundDecision';
+import {
   Inbox,
   Clock,
   CheckCircle2,
@@ -61,6 +66,18 @@ export const AdminDashboardPage: React.FC = () => {
       }
       return next;
     });
+  };
+
+  // Background effects user setting (Section 5)
+  const [bgSetting, setBgSetting] = useState<BackgroundSetting>(getStoredBackgroundSetting);
+
+  const handleBgSettingChange = (next: BackgroundSetting) => {
+    setBgSetting(next);
+    setStoredBackgroundSetting(next);
+    window.dispatchEvent(
+      new CustomEvent('k12-bg-setting-changed', { detail: { setting: next } })
+    );
+    toast.success(`Background effects set to ${next.toUpperCase()}`);
   };
 
   // Stats state
@@ -355,6 +372,11 @@ export const AdminDashboardPage: React.FC = () => {
       case 'filter_status_resolved':
         if (payload) updateQueryParam({ status: payload, page: '1' });
         break;
+      case 'toggle_bg_effects': {
+        const next: BackgroundSetting = bgSetting === 'auto' ? 'on' : bgSetting === 'on' ? 'off' : 'auto';
+        handleBgSettingChange(next);
+        break;
+      }
       case 'logout':
         logout();
         break;
@@ -673,6 +695,28 @@ export const AdminDashboardPage: React.FC = () => {
                   <span className="text-[9px] uppercase tracking-wider text-[#A3A3A3]">Resolved</span>
                 </div>
               </div>
+
+              {/* GridScan FX Control (Section 5) */}
+              <div className="pt-2 border-t border-white/5 flex items-center justify-between text-[10px]">
+                <span className="text-[#A3A3A3] font-medium">GridScan FX:</span>
+                <div className="inline-flex rounded-md bg-black/60 p-0.5 border border-white/10 text-[9px]">
+                  {(['auto', 'on', 'off'] as const).map((mode) => (
+                    <button
+                      key={mode}
+                      type="button"
+                      onClick={() => handleBgSettingChange(mode)}
+                      className={`px-1.5 py-0.5 rounded capitalize transition-all cursor-pointer ${
+                        bgSetting === mode
+                          ? 'bg-[#FFD60A] text-[#0A0A0A] font-bold shadow-xs'
+                          : 'text-[#A3A3A3] hover:text-[#F5F5F5]'
+                      }`}
+                      title={`Set background effects to ${mode}`}
+                    >
+                      {mode}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
 
@@ -781,9 +825,9 @@ export const AdminDashboardPage: React.FC = () => {
             label="Total Inquiries"
             value={stats.total}
             icon={Inbox}
-            colorClass="text-[#F5F5F5]"
-            badgeBg="bg-white/5"
-            accentColor="#F5F5F5"
+            colorClass="text-[#60A5FA]"
+            badgeBg="bg-[#60A5FA]/10"
+            accentColor="#60A5FA"
             delta={stats.deltaPct}
             rangeLabel="7d"
             sparklineData={stats.sparklines?.total}
