@@ -80,33 +80,35 @@ export const GHOST_FIBERS_THEME = {
   // Strand drawing style: clean luminous continuous lines
   fiberStyle: 'lines' as const,
   // Slow, calming drift velocity
-  speed: 0.28,
-  rollSpeed: 0.08,
-  scale: 1.15,
+  speed: 0.22,
+  rollSpeed: 0.05,
+  scale: 1.05,
+  // Angle rotation offset so strands drift toward right 60-70% focal area
+  rotation: 12,
   // Fiber strand structural density kept gentle and uncluttered
-  density: 0.35,
-  thickness: 1.0,
+  density: 0.28,
+  thickness: 0.85,
   layers: 3,
-  threads: 24,
-  waves: 3,
-  twist: 0.8,
-  volume: 1.2,
-  spread: 1.4,
-  // Controlled optical depth & bloom
-  depthOfField: 0.25,
-  focusDepth: 0.45,
-  glow: 0.35,
-  brightness: 0.85,
-  foldGlow: 0.4,
-  particles: 12,
-  sparkle: 0.2,
+  threads: 20,
+  waves: 2.2,
+  twist: 0.65,
+  volume: 1.0,
+  spread: 1.25,
+  // Controlled optical depth & bloom (moderate so white-hot core never exceeds text luminance)
+  depthOfField: 0.22,
+  focusDepth: 0.35,
+  glow: 0.24,
+  brightness: 0.65,
+  foldGlow: 0.28,
+  particles: 8,
+  sparkle: 0.15,
   // Extremely low grain to preserve crisp typography
-  grain: 0.015,
-  vignette: 0.4,
+  grain: 0.012,
+  vignette: 0.45,
   // Interaction parameters
   mouseInteraction: true,
   hoverEffect: 'part' as const,
-  mouseStrength: 0.3,
+  mouseStrength: 0.25,
   pulseOnClick: false,
   intro: false,
   lightMode: false,
@@ -115,40 +117,41 @@ export const GHOST_FIBERS_THEME = {
 };
 
 /**
- * Pure CSS Background Fallback (P1.2)
- * Renders 4 diagonal blurred gradient streaks in brand yellow and amber with
+ * Pure CSS Background Fallback (P1.2 & Phase 1 Polish)
+ * Renders right-weighted diagonal blurred gradient streaks in brand yellow and amber with
  * slow transform-only drift. Zero layout shift, fully accessible, disabled on reduced-motion.
  */
 export const CssGhostFibersFallback: React.FC = () => {
   return (
     <div
-      className="absolute inset-0 bg-[#050505] overflow-hidden"
+      className="absolute inset-0 bg-[#050505] overflow-hidden pointer-events-none"
       aria-hidden="true"
     >
-      {/* Ambient gradient streaks */}
+      {/* Right-weighted ambient gradient convergence (behind hero visual preview at 55%-70% x) */}
       <div
-        className="absolute -top-[20%] -left-[10%] w-[60vw] h-[60vh] rounded-full opacity-20 blur-[100px] pointer-events-none"
+        className="absolute top-[15%] right-[10%] w-[50vw] h-[50vh] rounded-full opacity-25 blur-[120px] pointer-events-none"
         style={{
-          background: 'radial-gradient(circle, rgba(255, 214, 10, 0.4) 0%, rgba(251, 146, 60, 0.15) 50%, transparent 70%)',
+          background: 'radial-gradient(circle, rgba(255, 214, 10, 0.45) 0%, rgba(251, 146, 60, 0.2) 45%, transparent 70%)',
           animation: 'css-fiber-drift 18s ease-in-out infinite alternate',
         }}
       />
       <div
-        className="absolute top-[30%] -right-[15%] w-[55vw] h-[55vh] rounded-full opacity-15 blur-[120px] pointer-events-none"
+        className="absolute top-[35%] right-[5%] w-[45vw] h-[45vh] rounded-full opacity-20 blur-[130px] pointer-events-none"
         style={{
-          background: 'radial-gradient(circle, rgba(251, 146, 60, 0.35) 0%, rgba(255, 214, 10, 0.1) 60%, transparent 80%)',
+          background: 'radial-gradient(circle, rgba(251, 146, 60, 0.35) 0%, rgba(255, 214, 10, 0.12) 50%, transparent 75%)',
           animation: 'css-fiber-drift-rev 22s ease-in-out infinite alternate',
         }}
       />
+      {/* Subtle left-side trace to keep visual continuity without crossing headline */}
       <div
-        className="absolute -bottom-[10%] left-[20%] w-[50vw] h-[40vh] rounded-full opacity-10 blur-[110px] pointer-events-none"
+        className="absolute top-[45%] left-[-5%] w-[35vw] h-[35vh] rounded-full opacity-[0.06] blur-[110px] pointer-events-none"
         style={{
-          background: 'radial-gradient(circle, rgba(255, 214, 10, 0.3) 0%, transparent 70%)',
+          background: 'radial-gradient(circle, rgba(255, 214, 10, 0.25) 0%, transparent 70%)',
         }}
       />
       {/* Subtle diagonal pinstripe structure */}
       <div
-        className="absolute inset-0 opacity-[0.03]"
+        className="absolute inset-0 opacity-[0.02]"
         style={{
           backgroundImage: 'linear-gradient(45deg, rgba(255, 214, 10, 0.3) 1px, transparent 1px)',
           backgroundSize: '48px 48px',
@@ -325,7 +328,7 @@ export const GhostFibersBackground: React.FC<GhostFibersBackgroundProps> = ({
       {/* 1. Base CSS Fallback Layer (Always present for instant paint) */}
       <CssGhostFibersFallback />
 
-      {/* 2. WebGL GhostFibers Canvas Layer (Lazy chunk, capped DPR, auto-paused) */}
+      {/* 2. WebGL GhostFibers Canvas Layer (Lazy chunk, capped DPR, auto-paused, right-weighted mask) */}
       {shouldRenderWebGL && (
         <div
           className={`absolute inset-0 transition-all duration-500 ease-in-out ${
@@ -335,6 +338,12 @@ export const GhostFibersBackground: React.FC<GhostFibersBackgroundProps> = ({
                 : 'opacity-25'
               : 'opacity-0'
           }`}
+          style={{
+            // Phase 1: Hero-only right-weighted mask so bright convergence point sits behind visual column (55-70% x)
+            // Left text column (0-45%) sits over the quietest, softened part
+            WebkitMaskImage: 'linear-gradient(90deg, rgba(0,0,0,0.12) 0%, rgba(0,0,0,0.35) 32%, #000000 62%)',
+            maskImage: 'linear-gradient(90deg, rgba(0,0,0,0.12) 0%, rgba(0,0,0,0.35) 32%, #000000 62%)',
+          }}
         >
           <GhostFibersErrorBoundary fallback={<CssGhostFibersFallback />}>
             <Suspense fallback={<CssGhostFibersFallback />}>
@@ -347,6 +356,7 @@ export const GhostFibersBackground: React.FC<GhostFibersBackgroundProps> = ({
                 speed={GHOST_FIBERS_THEME.speed}
                 rollSpeed={GHOST_FIBERS_THEME.rollSpeed}
                 scale={GHOST_FIBERS_THEME.scale}
+                rotation={GHOST_FIBERS_THEME.rotation}
                 density={GHOST_FIBERS_THEME.density}
                 thickness={GHOST_FIBERS_THEME.thickness}
                 layers={GHOST_FIBERS_THEME.layers}
@@ -379,28 +389,36 @@ export const GhostFibersBackground: React.FC<GhostFibersBackgroundProps> = ({
         </div>
       )}
 
-      {/* 3. Readability Overlays (P1.2) */}
-      {/* (a) Left-to-right scrim behind hero text */}
+      {/* 3. Readability & Contrast Scrims (Phase 1) */}
+      {/* (a) Soft radial scrim directly behind the left headline & text block (25% x, 45% y, fading by 60%) */}
       <div
-        className="absolute inset-0"
+        className="absolute inset-0 pointer-events-none"
         style={{
-          background: 'linear-gradient(to right, rgba(5, 5, 5, 0.85) 0%, rgba(5, 5, 5, 0.5) 45%, transparent 80%)',
+          background: 'radial-gradient(ellipse 65% 55% at 25% 45%, rgba(5, 5, 5, 0.88) 0%, rgba(5, 5, 5, 0.65) 40%, transparent 68%)',
         }}
       />
 
-      {/* (b) Bottom vertical gradient fading into solid #050505 */}
+      {/* (b) Left-to-right gradient scrim keeping left side serene and right side vibrant */}
       <div
-        className="absolute inset-0"
+        className="absolute inset-0 pointer-events-none"
         style={{
-          background: 'linear-gradient(to bottom, transparent 40%, rgba(5, 5, 5, 0.6) 70%, #050505 100%)',
+          background: 'linear-gradient(to right, rgba(5, 5, 5, 0.75) 0%, rgba(5, 5, 5, 0.35) 45%, transparent 80%)',
         }}
       />
 
-      {/* (c) Radial perimeter vignette */}
+      {/* (c) Bottom vertical gradient fading cleanly into solid obsidian #050505 */}
       <div
-        className="absolute inset-0"
+        className="absolute inset-0 pointer-events-none"
         style={{
-          background: 'radial-gradient(circle at 50% 40%, transparent 50%, rgba(5, 5, 5, 0.8) 100%)',
+          background: 'linear-gradient(to bottom, transparent 40%, rgba(5, 5, 5, 0.7) 70%, #050505 100%)',
+        }}
+      />
+
+      {/* (d) Radial perimeter vignette */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: 'radial-gradient(circle at 50% 40%, transparent 50%, rgba(5, 5, 5, 0.75) 100%)',
         }}
       />
     </div>
