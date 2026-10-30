@@ -12,7 +12,7 @@ const CssWebThreadsFallback: React.FC = () => {
     >
       {/* Ambient golden core glow */}
       <div
-        className="absolute inset-0 opacity-15 pointer-events-none"
+        className="absolute inset-0 opacity-10 pointer-events-none"
         style={{
           backgroundImage:
             'radial-gradient(ellipse at 50% 50%, rgba(255, 214, 10, 0.08) 0%, rgba(245, 158, 11, 0.02) 45%, transparent 70%)',
@@ -21,7 +21,7 @@ const CssWebThreadsFallback: React.FC = () => {
 
       {/* Elegant SVG woven hyperthread array */}
       <svg
-        className="absolute inset-0 w-full h-full opacity-25"
+        className="absolute inset-0 w-full h-full opacity-15"
         xmlns="http://www.w3.org/2000/svg"
         preserveAspectRatio="none"
         viewBox="0 0 1440 900"
@@ -148,9 +148,9 @@ export const WebThreadsBackground: React.FC = () => {
         <Suspense fallback={<CssWebThreadsFallback />}>
           <WebThreads
             colors={['#FFD60A', '#F59E0B', '#D97706']}
-            coreColor="#FFFDF0"
+            coreColor="#D4AF37"
             backgroundColor="#050505"
-            threadCount={8}
+            threadCount={5}
             speed={0.2}
             frequency={3.2}
             spread={0.2}
@@ -158,11 +158,11 @@ export const WebThreadsBackground: React.FC = () => {
             position={0.5}
             pinch={0.5}
             nodes={1}
-            glow={0.025}
+            glow={0.004}
             falloff={0.65}
-            thickness={1.1}
-            brightness={0.7}
-            opacity={0.8}
+            thickness={0.65}
+            brightness={0.20}
+            opacity={0.30}
             depth={0.15}
             pulses={0.08}
             fade={0.15}
@@ -176,7 +176,9 @@ export const WebThreadsBackground: React.FC = () => {
         </Suspense>
       </WebThreadsErrorBoundary>
       {/* Delicate vignette overlay that preserves thread luminescence while protecting text contrast */}
-      <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-[#050505]/60 via-transparent to-[#050505]/50" />
+      <div className="absolute inset-0 pointer-events-none bg-[#050505]/60" />
+      <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: "radial-gradient(ellipse at 50% 50%, rgba(5,5,5,0.75) 0%, rgba(5,5,5,0.3) 65%, transparent 100%)" }} />
+      <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-[#050505]/80 via-transparent to-[#050505]/70" />
     </aside>
   );
 };

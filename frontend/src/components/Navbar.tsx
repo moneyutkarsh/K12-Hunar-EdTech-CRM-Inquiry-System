@@ -84,18 +84,30 @@ export const Navbar: React.FC = () => {
   };
 
   return (
-    <nav className="w-full border-b border-white/5 bg-[#050505]/80 backdrop-blur-md sticky top-0 z-40">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+    <nav className="w-full border-b border-white/10 bg-[#050505]/85 backdrop-blur-md sticky top-0 z-40">
+      <div className="w-full px-4 sm:px-6 md:px-8 lg:px-10 h-16 sm:h-20 flex items-center justify-between">
         {/* Brand */}
-        <Link to="/" className="flex items-center gap-2.5 group">
-          <img
-            src="/k12_hunar_logo.png"
-            alt="K12 Hunar"
-            className="w-8 h-8 rounded-lg object-contain bg-black/60 border border-white/10 group-hover:border-[#FFD60A]/40 shadow-sm group-hover:scale-105 transition-all duration-200"
-          />
-          <span className="font-semibold text-lg tracking-tight text-[#F5F5F5] group-hover:text-[#FFD60A] transition-colors">
-            K12 Hunar <span className="text-[#FFD60A] font-light text-sm ml-1 px-1.5 py-0.5 rounded bg-[#FFD60A]/10 border border-[#FFD60A]/20">CRM</span>
-          </span>
+        <Link to="/" className="flex items-center gap-3.5 group focus:outline-none focus:ring-2 focus:ring-[#FFD60A] rounded-xl py-1 px-1.5 -ml-1.5 transition-all">
+          <div className="relative">
+            <img
+              src="/k12_hunar_logo.png"
+              alt="K12 Hunar"
+              className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl object-contain bg-black/80 p-1 border border-white/15 group-hover:border-[#FFD60A]/60 shadow-[0_4px_16px_rgba(0,0,0,0.6)] group-hover:shadow-[0_0_20px_rgba(255,214,10,0.25)] group-hover:scale-105 transition-all duration-300"
+            />
+            <div
+              className="absolute inset-0 rounded-xl bg-gradient-to-tr from-[#FFD60A]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
+              aria-hidden="true"
+            />
+          </div>
+          <div className="flex items-center gap-2.5">
+            <span className="font-extrabold text-lg sm:text-xl tracking-tight text-white flex items-center">
+              <span>K12</span>
+              <span className="ml-1 text-[#F5F5F5] group-hover:text-[#FFD60A] transition-colors">Hunar</span>
+            </span>
+            <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold tracking-widest uppercase bg-[#FFD60A]/10 text-[#FFD60A] border border-[#FFD60A]/30 shadow-sm">
+              {isDashboard ? 'CRM' : 'PORTAL'}
+            </span>
+          </div>
         </Link>
 
         {/* Desktop Links */}

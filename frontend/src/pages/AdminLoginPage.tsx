@@ -7,13 +7,11 @@ import { toast } from 'sonner';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../lib/api';
 import {
-  Shield,
+  ShieldCheck,
   Eye,
   EyeOff,
   Loader2,
   ArrowLeft,
-  Lock,
-  UserPlus,
   X,
   Mail,
   Send,
@@ -43,7 +41,7 @@ export const AdminLoginPage: React.FC = () => {
   }, [searchParams]);
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [ssoModal, setSsoModal] = useState<null | 'google' | 'microsoft' | 'email'>(null);
+  const [ssoModal, setSsoModal] = useState<null | 'google' | 'email'>(null);
   const [ssoStep, setSsoStep] = useState<'email' | 'code'>('email');
   const [otpCode, setOtpCode] = useState<string>('');
   const [resendCountdown, setResendCountdown] = useState<number>(0);
@@ -141,7 +139,7 @@ export const AdminLoginPage: React.FC = () => {
   }, [resendCountdown]);
 
   const openVerificationModal = (
-    provider: 'google' | 'microsoft' | 'email',
+    provider: 'google' | 'email',
     prefillEmail?: string
   ) => {
     setSsoModal(provider);
@@ -380,19 +378,7 @@ export const AdminLoginPage: React.FC = () => {
                 <span>Continue with Google</span>
               </button>
 
-              <button
-                type="button"
-                onClick={() => openVerificationModal('microsoft')}
-                className="w-full py-3 px-4 rounded-xl bg-[#121217] hover:bg-white/[0.06] active:bg-white/[0.03] border border-white/10 text-xs font-medium text-[#F5F5F5] transition-all flex items-center justify-center gap-3 cursor-pointer shadow-sm group"
-              >
-                <svg className="w-4 h-4 shrink-0 group-hover:scale-105 transition-transform" viewBox="0 0 21 21">
-                  <rect x="1" y="1" width="9" height="9" fill="#f25022" />
-                  <rect x="11" y="1" width="9" height="9" fill="#7fba00" />
-                  <rect x="1" y="11" width="9" height="9" fill="#00a4ef" />
-                  <rect x="11" y="11" width="9" height="9" fill="#ffb900" />
-                </svg>
-                <span>Continue with Microsoft</span>
-              </button>
+
             </div>
 
             {/* Mode Switch & Privacy Policy */}
@@ -522,15 +508,7 @@ export const AdminLoginPage: React.FC = () => {
                         <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
                       </svg>
                     </div>
-                  ) : ssoModal === 'microsoft' ? (
-                    <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
-                      <svg className="w-5 h-5" viewBox="0 0 21 21">
-                        <rect x="1" y="1" width="9" height="9" fill="#f25022" />
-                        <rect x="11" y="1" width="9" height="9" fill="#7fba00" />
-                        <rect x="1" y="11" width="9" height="9" fill="#00a4ef" />
-                        <rect x="11" y="11" width="9" height="9" fill="#ffb900" />
-                      </svg>
-                    </div>
+
                   ) : (
                     <div className="w-9 h-9 rounded-xl bg-[#FFD60A]/10 border border-[#FFD60A]/30 flex items-center justify-center text-[#FFD60A]">
                       <Mail className="w-5 h-5" />
@@ -540,8 +518,6 @@ export const AdminLoginPage: React.FC = () => {
                     <h2 className="text-base font-bold text-[#F5F5F5]">
                       {ssoModal === 'google'
                         ? 'Google Workspace Verification'
-                        : ssoModal === 'microsoft'
-                        ? 'Microsoft 365 Verification'
                         : 'Email Verification Code'}
                     </h2>
                     <p className="text-[11px] text-[#A3A3A3]">
@@ -582,8 +558,6 @@ export const AdminLoginPage: React.FC = () => {
                     <label htmlFor="custom-sso" className="block text-xs font-semibold uppercase tracking-wider text-[#A3A3A3] mb-1.5">
                       {ssoModal === 'google'
                         ? 'Google / Workspace Email'
-                        : ssoModal === 'microsoft'
-                        ? 'Microsoft 365 / School Email'
                         : 'Administrator Email'}
                     </label>
                     <input
@@ -593,8 +567,6 @@ export const AdminLoginPage: React.FC = () => {
                       placeholder={
                         ssoModal === 'google'
                           ? 'admin@school.edu'
-                          : ssoModal === 'microsoft'
-                          ? 'admin@k12hunar.com'
                           : 'admin@k12hunar.com'
                       }
                       value={customSsoEmail}

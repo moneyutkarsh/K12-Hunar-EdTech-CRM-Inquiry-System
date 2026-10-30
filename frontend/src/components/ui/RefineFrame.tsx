@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, CheckCircle2, AlertCircle, Loader2, ShieldCheck } from 'lucide-react';
+import { CheckCircle2, AlertCircle, Loader2, ShieldCheck } from 'lucide-react';
 
 export type RefineFrameStage = 'idle' | 'validating' | 'submitting' | 'ready' | 'error';
 

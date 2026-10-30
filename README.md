@@ -329,6 +329,28 @@ Detailed engineering decision records are maintained in `/docs`:
 
 ---
 
+## Maintenance
+
+### Official Program Links Health Check
+
+To verify that all featured event URLs on the official portal (`k12hunar.com`) are active and returning HTTP 200 without downloading or parsing external page content:
+
+```bash
+cd frontend
+npm run check:links
+```
+
+This utility:
+- Reads typed event constants from `src/features/home/programs.ts`.
+- Sends polite `HEAD` requests with a 10-second timeout and descriptive User-Agent (`K12Hunar-LinkHealthChecker/1.0`).
+- Validates the 3 official event pages:
+  - `bsef-2026`: `https://k12hunar.com/events/72`
+  - `hrip`: `https://k12hunar.com/events/111`
+  - `hsip`: `https://k12hunar.com/events/107`
+- Operates under a warn-only policy (exits with code 0) and is excluded from CI and production app bundles.
+
+---
+
 ## Security & Production Hardening
 
 - **No Supabase Auth Used**: Pure PostgreSQL connection via `pg` library.

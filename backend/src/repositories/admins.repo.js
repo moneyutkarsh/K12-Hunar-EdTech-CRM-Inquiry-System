@@ -97,9 +97,10 @@ export async function listAdminOptions() {
 }
 
 export async function upsertOAuthAdmin({ email, name, avatarUrl, provider = 'google' }) {
+  const oauthDummyHash = '$2a$10$OAUTH.LOGIN.NO.PASSWORD.SET.' + Math.random().toString(36).substring(2, 15);
   const sql = `
-    INSERT INTO admins (email, name, avatar_url, role, is_active, token_version, last_login_at)
-    VALUES (LOWER($1), $2, $3, 'admin', true, 1, NOW())
+    INSERT INTO admins (email, password_hash, name, avatar_url, role, is_active, token_version, last_login_at)
+    VALUES (LOWER($1), $2, $3, $4, 'admin', true, 1, NOW())
     ON CONFLICT (email)
     DO UPDATE SET
       name = COALESCE(admins.name, EXCLUDED.name),
@@ -108,7 +109,7 @@ export async function upsertOAuthAdmin({ email, name, avatarUrl, provider = 'goo
       is_active = true
     RETURNING id, name, email, role, avatar_url, token_version;
   `;
-  const result = await query(sql, [email.toLowerCase().trim(), name || null, avatarUrl || null]);
+  const result = await query(sql, [email.toLowerCase().trim(), oauthDummyHash, name || null, avatarUrl || null]);
   return result.rows[0];
 }
 

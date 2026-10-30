@@ -34,20 +34,20 @@ describe('Home Page Polish & Reveal Component Logic', () => {
     expect(dynamic.y).toBe(3);
   });
 
-  it('correctly maps routes to hyperthread WebThreadsBackground', () => {
-    const isHyperthreadRoute = (path: string) => {
-      const isHome = path === '/';
+  it('correctly maps routes to AeroShards AppBackground (all except dashboard)', () => {
+    const isAeroShardsRoute = (path: string) => {
       const isAuth = path === '/admin/login';
-      const isInquiry = path === '/inquiry';
-      const isTrack = path === '/track';
-      return isHome || isAuth || isInquiry || isTrack;
+      const isDashboard = path.startsWith('/admin') && !isAuth;
+      return !isDashboard;
     };
 
-    expect(isHyperthreadRoute('/')).toBe(true);
-    expect(isHyperthreadRoute('/admin/login')).toBe(true);
-    expect(isHyperthreadRoute('/track')).toBe(true);
-    expect(isHyperthreadRoute('/inquiry')).toBe(true);
-    expect(isHyperthreadRoute('/admin/dashboard')).toBe(false);
-    expect(isHyperthreadRoute('/admin/activity')).toBe(false);
+    expect(isAeroShardsRoute('/')).toBe(true);
+    expect(isAeroShardsRoute('/admin/login')).toBe(true);
+    expect(isAeroShardsRoute('/track')).toBe(true);
+    expect(isAeroShardsRoute('/inquiry')).toBe(true);
+    expect(isAeroShardsRoute('/unknown-404')).toBe(true);
+    expect(isAeroShardsRoute('/admin')).toBe(false);
+    expect(isAeroShardsRoute('/admin/activity')).toBe(false);
+    expect(isAeroShardsRoute('/admin/settings')).toBe(false);
   });
 });

@@ -1,0 +1,12 @@
+{
+  "current_version": 1,
+  "versions": [
+    {
+      "version": 1,
+      "timestamp": "2026-10-29T18:42:51.409722+00:00",
+      "description": "Initial Baseline Markov Model",
+      "kl_divergence": 0.0,
+      "file": "v1.json"
+    }
+  ]
+}

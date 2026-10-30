@@ -25,6 +25,7 @@ import {
 import { api } from '../lib/api';
 import { Reveal } from '../components/ui/Reveal';
 import { MOTION_CONSTANTS } from '../constants/motion';
+import { FeaturedProgramsCarousel } from '../features/home/FeaturedProgramsCarousel';
 
 interface PublicStats {
   handledApprox: number;
@@ -257,24 +258,33 @@ export const HomePage: React.FC = () => {
       {/* 1. Public Navbar (Phase 5: Transparent at top, glass on scroll with sliding spy indicator) */}
       <header
         className={`fixed top-0 left-0 right-0 z-40 transition-all duration-200 ${isScrolled
-          ? 'h-14 bg-[#050505]/70 backdrop-blur-xl border-b border-white/[0.08] shadow-lg shadow-black/40'
-          : 'h-16 bg-transparent border-b border-transparent'
+          ? 'h-16 bg-[#050505]/85 backdrop-blur-xl border-b border-white/[0.08] shadow-lg shadow-black/40'
+          : 'h-20 bg-transparent border-b border-transparent'
           }`}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center justify-between">
-          {/* Logo & Brand Pill */}
-          <Link to="/" className="flex items-center gap-2.5 group focus:outline-none focus:ring-2 focus:ring-[#FFD60A] rounded-lg">
-            <img
-              src="/k12_hunar_logo.png"
-              alt="K12 Hunar"
-              className="w-9 h-9 rounded-lg object-contain bg-black/60 border border-white/10 group-hover:border-[#FFD60A]/40 shadow-sm group-hover:scale-105 transition-all duration-200"
-            />
-            <span className="font-bold text-base tracking-tight text-[#F5F5F5] group-hover:text-white transition-colors">
-              K12 Hunar
-            </span>
-            <span className="px-1.5 py-0.5 rounded text-[9px] font-semibold uppercase tracking-wider bg-[#FFD60A]/10 text-[#FFD60A] border border-[#FFD60A]/20">
-              Portal
-            </span>
+        <div className="w-full px-4 sm:px-6 md:px-8 lg:px-10 h-full flex items-center justify-between">
+          {/* Logo & Brand Pill - Anchored in left top corner in larger refined size */}
+          <Link to="/" className="flex items-center gap-3.5 group focus:outline-none focus:ring-2 focus:ring-[#FFD60A] rounded-xl py-1 px-1.5 -ml-1.5 transition-all">
+            <div className="relative">
+              <img
+                src="/k12_hunar_logo.png"
+                alt="K12 Hunar"
+                className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl object-contain bg-black/80 p-1 border border-white/15 group-hover:border-[#FFD60A]/60 shadow-[0_4px_16px_rgba(0,0,0,0.6)] group-hover:shadow-[0_0_20px_rgba(255,214,10,0.25)] group-hover:scale-105 transition-all duration-300"
+              />
+              <div
+                className="absolute inset-0 rounded-xl bg-gradient-to-tr from-[#FFD60A]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
+                aria-hidden="true"
+              />
+            </div>
+            <div className="flex items-center gap-2.5">
+              <span className="font-extrabold text-lg sm:text-xl tracking-tight text-white flex items-center">
+                <span>K12</span>
+                <span className="ml-1 text-[#F5F5F5] group-hover:text-[#FFD60A] transition-colors">Hunar</span>
+              </span>
+              <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold tracking-widest uppercase bg-[#FFD60A]/10 text-[#FFD60A] border border-[#FFD60A]/30 shadow-sm">
+                PORTAL
+              </span>
+            </div>
           </Link>
 
           {/* Desktop GooeyNav Navigation Bar (React Bits Liquid Blob Physics) */}
@@ -398,135 +408,143 @@ export const HomePage: React.FC = () => {
           id="home-hero-section"
           className="relative min-h-[calc(100svh-4rem)] flex flex-col justify-center px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto pt-16 pb-24"
         >
-          <div className="max-w-3xl text-left">
-            {/* Headline with word stagger, clamp, text-wrap balance, and animated underline */}
-            <h1
-              className="font-extrabold text-[#F5F5F5] tracking-tight leading-[1.04] mb-8"
-              style={{
-                fontSize: 'clamp(2.75rem, 5.8vw, 5.25rem)',
-                letterSpacing: '-0.035em',
-                textWrap: 'balance',
-                textShadow: '0 2px 24px rgba(0,0,0,0.85), 0 4px 48px rgba(0,0,0,0.95)',
-              }}
-            >
-              {headlineWords.map((word, idx) => (
-                <motion.span
-                  key={idx}
-                  initial={prefersReducedMotion ? false : { opacity: 0, y: 16 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{
-                    duration: 0.35,
-                    delay: idx * MOTION_CONSTANTS.heroLoadSequence.headlineWordStagger,
-                  }}
-                  className="inline-block mr-2.5 sm:mr-3.5"
-                >
-                  {word}
-                </motion.span>
-              ))}
-              <span className="relative inline-block text-[#FFD60A]">
-                <motion.span
-                  initial={prefersReducedMotion ? false : { opacity: 0, y: 16 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: 0.2 }}
-                  className="inline-block"
-                >
-                  {headlineAccent}
-                </motion.span>
-                {/* Thin animated SVG underline stroke */}
-                <svg
-                  className="absolute -bottom-2 left-0 w-full h-2 overflow-visible pointer-events-none"
-                  viewBox="0 0 240 8"
-                  fill="none"
-                  aria-hidden="true"
-                >
-                  <motion.path
-                    d="M2 6C60 2 180 2 238 6"
-                    stroke="#FFD60A"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    initial={prefersReducedMotion ? false : { pathLength: 0, opacity: 0 }}
-                    animate={{ pathLength: 1, opacity: 1 }}
-                    transition={{ duration: 0.65, delay: 0.45, ease: 'easeOut' }}
-                  />
-                </svg>
-              </span>
-            </h1>
-
-            {/* Subheading: #B8B8B8, max-w-56ch, text-wrap pretty */}
-            <motion.p
-              initial={prefersReducedMotion ? false : { opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.35, delay: MOTION_CONSTANTS.heroLoadSequence.subhead }}
-              className="text-[#B8B8B8] leading-[1.65] mb-8"
-              style={{
-                maxWidth: '54ch',
-                fontSize: 'clamp(1.05rem, 1.4vw, 1.25rem)',
-                textWrap: 'pretty',
-                textShadow: '0 2px 14px rgba(0,0,0,0.85)',
-              }}
-            >
-              Connect directly with the K12 Hunar admissions committee, merit scholarship board, and festival teams. Every inquiry receives a dedicated{' '}
-              <span className="text-[#F5F5F5] font-medium">reference code</span> and a guaranteed{' '}
-              <span className="text-[#F5F5F5] font-medium">24-hour response</span>.
-            </motion.p>
-
-            {/* Dual CTAs */}
-            <motion.div
-              initial={prefersReducedMotion ? false : { opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.35, delay: MOTION_CONSTANTS.heroLoadSequence.ctas }}
-              className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 mb-3"
-            >
-              <Link
-                to="/inquiry"
-                className="btn-shine-effect px-6 py-3.5 rounded-xl bg-[#FFD60A] hover:bg-[#FFE14D] active:scale-[0.98] text-[#0A0A0A] font-bold text-sm shadow-lg shadow-[#FFD60A]/15 transition-all flex items-center justify-center gap-2 group cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#FFD60A]/50 focus:ring-offset-2 focus:ring-offset-[#050505] min-h-[44px]"
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-10 items-center w-full">
+            {/* Left Column: Headline, Subheading, CTAs & Trust Badges */}
+            <div className="lg:col-span-7 max-w-2xl text-left">
+              {/* Headline with word stagger, clamp, text-wrap balance, and animated underline */}
+              <h1
+                className="font-extrabold text-[#F5F5F5] tracking-tight leading-[1.04] mb-8"
+                style={{
+                  fontSize: 'clamp(2.5rem, 5.2vw, 4.75rem)',
+                  letterSpacing: '-0.035em',
+                  textWrap: 'balance',
+                  textShadow: '0 2px 24px rgba(0,0,0,0.85), 0 4px 48px rgba(0,0,0,0.95)',
+                }}
               >
-                <span>Submit an inquiry</span>
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </Link>
-              <Link
-                to="/track"
-                className="glass-card px-6 py-3.5 rounded-xl hover:border-[#FFD60A]/50 hover:bg-white/[0.08] text-[#F5F5F5] font-semibold text-sm transition-all flex items-center justify-center gap-2 group cursor-pointer active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-[#FFD60A]/50 focus:ring-offset-2 focus:ring-offset-[#050505] min-h-[44px]"
-              >
-                <Search className="w-4 h-4 text-[#FFD60A] group-hover:scale-110 transition-transform" />
-                <span>Track existing inquiry</span>
-              </Link>
-            </motion.div>
-
-            {/* Reassurance Microcopy */}
-            <motion.p
-              initial={prefersReducedMotion ? false : { opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.35, delay: 0.48 }}
-              className="text-xs text-[#A3A3A3] mb-8"
-            >
-              {REASSURANCE_COPY}
-            </motion.p>
-
-            {/* Trust Badges Row */}
-            <motion.div
-              initial={prefersReducedMotion ? false : { opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.35, delay: MOTION_CONSTANTS.heroLoadSequence.chips }}
-              className="grid grid-cols-1 sm:grid-cols-3 gap-3"
-            >
-              {[
-                { icon: Clock, text: 'Guaranteed reply in 24h' },
-                { icon: Layers, text: '4 dedicated tracks' },
-                { icon: ShieldCheck, text: 'Verified counselor response' },
-              ].map((chip, idx) => {
-                const Icon = chip.icon;
-                return (
-                  <div
+                {headlineWords.map((word, idx) => (
+                  <motion.span
                     key={idx}
-                    className="p-3.5 rounded-xl bg-white/[0.03] border border-white/10 hover:border-[#FFD60A]/30 transition-colors flex items-center gap-2.5 h-12"
+                    initial={prefersReducedMotion ? false : { opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{
+                      duration: 0.35,
+                      delay: idx * MOTION_CONSTANTS.heroLoadSequence.headlineWordStagger,
+                    }}
+                    className="inline-block mr-2.5 sm:mr-3.5"
                   >
-                    <Icon className="w-4 h-4 text-[#FFD60A] shrink-0" />
-                    <span className="text-xs text-[#F5F5F5] font-medium">{chip.text}</span>
-                  </div>
-                );
-              })}
-            </motion.div>
+                    {word}
+                  </motion.span>
+                ))}
+                <span className="relative inline-block text-[#FFD60A]">
+                  <motion.span
+                    initial={prefersReducedMotion ? false : { opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: 0.2 }}
+                    className="inline-block"
+                  >
+                    {headlineAccent}
+                  </motion.span>
+                  {/* Thin animated SVG underline stroke */}
+                  <svg
+                    className="absolute -bottom-2 left-0 w-full h-2 overflow-visible pointer-events-none"
+                    viewBox="0 0 240 8"
+                    fill="none"
+                    aria-hidden="true"
+                  >
+                    <motion.path
+                      d="M2 6C60 2 180 2 238 6"
+                      stroke="#FFD60A"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      initial={prefersReducedMotion ? false : { pathLength: 0, opacity: 0 }}
+                      animate={{ pathLength: 1, opacity: 1 }}
+                      transition={{ duration: 0.65, delay: 0.45, ease: 'easeOut' }}
+                    />
+                  </svg>
+                </span>
+              </h1>
+
+              {/* Subheading: #B8B8B8, max-w-56ch, text-wrap pretty */}
+              <motion.p
+                initial={prefersReducedMotion ? false : { opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.35, delay: MOTION_CONSTANTS.heroLoadSequence.subhead }}
+                className="text-[#B8B8B8] leading-[1.65] mb-8"
+                style={{
+                  maxWidth: '54ch',
+                  fontSize: 'clamp(1rem, 1.3vw, 1.15rem)',
+                  textWrap: 'pretty',
+                  textShadow: '0 2px 14px rgba(0,0,0,0.85)',
+                }}
+              >
+                Connect directly with the K12 Hunar admissions committee, merit scholarship board, and festival teams. Every inquiry receives a dedicated{' '}
+                <span className="text-[#F5F5F5] font-medium">reference code</span> and a guaranteed{' '}
+                <span className="text-[#F5F5F5] font-medium">24-hour response</span>.
+              </motion.p>
+
+              {/* Dual CTAs */}
+              <motion.div
+                initial={prefersReducedMotion ? false : { opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.35, delay: MOTION_CONSTANTS.heroLoadSequence.ctas }}
+                className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 mb-3"
+              >
+                <Link
+                  to="/inquiry"
+                  className="btn-shine-effect px-6 py-3.5 rounded-xl bg-[#FFD60A] hover:bg-[#FFE14D] active:scale-[0.98] text-[#0A0A0A] font-bold text-sm shadow-lg shadow-[#FFD60A]/15 transition-all flex items-center justify-center gap-2 group cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#FFD60A]/50 focus:ring-offset-2 focus:ring-offset-[#050505] min-h-[44px]"
+                >
+                  <span>Submit an inquiry</span>
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </Link>
+                <Link
+                  to="/track"
+                  className="glass-card px-6 py-3.5 rounded-xl hover:border-[#FFD60A]/50 hover:bg-white/[0.08] text-[#F5F5F5] font-semibold text-sm transition-all flex items-center justify-center gap-2 group cursor-pointer active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-[#FFD60A]/50 focus:ring-offset-2 focus:ring-offset-[#050505] min-h-[44px]"
+                >
+                  <Search className="w-4 h-4 text-[#FFD60A] group-hover:scale-110 transition-transform" />
+                  <span>Track existing inquiry</span>
+                </Link>
+              </motion.div>
+
+              {/* Reassurance Microcopy */}
+              <motion.p
+                initial={prefersReducedMotion ? false : { opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.35, delay: 0.48 }}
+                className="text-xs text-[#A3A3A3] mb-8"
+              >
+                {REASSURANCE_COPY}
+              </motion.p>
+
+              {/* Trust Badges Row */}
+              <motion.div
+                initial={prefersReducedMotion ? false : { opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.35, delay: MOTION_CONSTANTS.heroLoadSequence.chips }}
+                className="grid grid-cols-1 sm:grid-cols-3 gap-3"
+              >
+                {[
+                  { icon: Clock, text: 'Guaranteed reply in 24h' },
+                  { icon: Layers, text: '4 dedicated tracks' },
+                  { icon: ShieldCheck, text: 'Verified counselor response' },
+                ].map((chip, idx) => {
+                  const Icon = chip.icon;
+                  return (
+                    <div
+                      key={idx}
+                      className="p-3 rounded-xl bg-white/[0.03] border border-white/10 hover:border-[#FFD60A]/30 transition-colors flex items-center gap-2.5 h-12"
+                    >
+                      <Icon className="w-4 h-4 text-[#FFD60A] shrink-0" />
+                      <span className="text-xs text-[#F5F5F5] font-medium">{chip.text}</span>
+                    </div>
+                  );
+                })}
+              </motion.div>
+            </div>
+
+            {/* Right Column: Featured Programs Carousel */}
+            <div className="lg:col-span-5 w-full flex items-center justify-center">
+              <FeaturedProgramsCarousel />
+            </div>
           </div>
 
           {/* Scroll Cue at Bottom of Hero */}

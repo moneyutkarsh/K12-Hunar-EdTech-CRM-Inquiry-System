@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { toast } from 'sonner';
 import { Link, useSearchParams } from 'react-router-dom';
 import { api } from '../lib/api';
-import { Sparkles, Send, CheckCircle2, Loader2, Shield, GraduationCap, Award, Building2, Copy, Check, ArrowRight, User, Mail, Phone, MessageSquare } from 'lucide-react';
+import { Sparkles, Send, CheckCircle2, Loader2, Shield, GraduationCap, Award, Building2, Copy, Check, ArrowRight, User, Mail, MessageSquare } from 'lucide-react';
 import { RefineFrame } from '../components/ui/RefineFrame';
 
 const publicInquirySchema = z.object({

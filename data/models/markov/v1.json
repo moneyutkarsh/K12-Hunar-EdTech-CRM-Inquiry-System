@@ -1,0 +1,115 @@
+{
+  "version": 1,
+  "timestamp": "2026-10-29T18:42:51.409722+00:00",
+  "description": "Initial Baseline Markov Model",
+  "kl_divergence": 0.0,
+  "is_drifted": false,
+  "state": {
+    "vocab": [
+      "collection",
+      "command_and_control",
+      "credential_access",
+      "defense_evasion",
+      "discovery",
+      "execution",
+      "exfiltration",
+      "impact",
+      "initial_access",
+      "lateral_movement",
+      "persistence",
+      "privilege_escalation",
+      "reconnaissance"
+    ],
+    "transitions": {
+      "reconnaissance": {
+        "initial_access": 1.0
+      },
+      "initial_access": {
+        "execution": 1.0
+      },
+      "execution": {
+        "persistence": 1.0
+      },
+      "persistence": {
+        "privilege_escalation": 1.0
+      },
+      "privilege_escalation": {
+        "defense_evasion": 1.0
+      },
+      "defense_evasion": {
+        "credential_access": 1.0
+      },
+      "credential_access": {
+        "discovery": 1.0
+      },
+      "discovery": {
+        "lateral_movement": 1.0
+      },
+      "lateral_movement": {
+        "collection": 1.0
+      },
+      "collection": {
+        "command_and_control": 1.0
+      },
+      "command_and_control": {
+        "exfiltration": 1.0
+      },
+      "exfiltration": {
+        "impact": 1.0
+      }
+    },
+    "unigrams": {
+      "reconnaissance": 1.0,
+      "initial_access": 1.0,
+      "execution": 1.0,
+      "persistence": 1.0,
+      "privilege_escalation": 1.0,
+      "defense_evasion": 1.0,
+      "credential_access": 1.0,
+      "discovery": 1.0,
+      "lateral_movement": 1.0,
+      "collection": 1.0,
+      "command_and_control": 1.0,
+      "exfiltration": 1.0,
+      "impact": 1.0
+    },
+    "baseline_transitions": {
+      "reconnaissance": {
+        "initial_access": 1.0
+      },
+      "initial_access": {
+        "execution": 1.0
+      },
+      "execution": {
+        "persistence": 1.0
+      },
+      "persistence": {
+        "privilege_escalation": 1.0
+      },
+      "privilege_escalation": {
+        "defense_evasion": 1.0
+      },
+      "defense_evasion": {
+        "credential_access": 1.0
+      },
+      "credential_access": {
+        "discovery": 1.0
+      },
+      "discovery": {
+        "lateral_movement": 1.0
+      },
+      "lateral_movement": {
+        "collection": 1.0
+      },
+      "collection": {
+        "command_and_control": 1.0
+      },
+      "command_and_control": {
+        "exfiltration": 1.0
+      },
+      "exfiltration": {
+        "impact": 1.0
+      }
+    }
+  }
+}
