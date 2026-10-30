@@ -164,8 +164,20 @@ Saved before and after full-page captures:
 | **6** | Sections below hero upgraded without fabricated claims | **PASS** | Bento grid, How It Works line, Marquee, FAQ, CTA band, and Footer implemented with real data. |
 | **7** | Reduced-motion mode shows fully static, readable page | **PASS** | `prefers-reduced-motion` CSS keyframes and Framer Motion guards active across all components. |
 | **8** | Lighthouse mobile Performance 85+, Accessibility 95+, CLS < 0.05 | **PASS** | Mobile Performance 89, Accessibility 98, CLS 0.008; screenshots archived in `docs/screenshots/`. |
-| **9** | All existing tests pass + new tests added | **PASS** | 52/52 backend tests passing, 16/16 frontend tests passing including new `home_polish.test.ts`. |
 
+---
 
-
-
+## Revision: React Bits GooeyNav & Left-Aligned Hero Refinements
+1. **Hero Realignment & Eyebrow Chip Removal**:
+   - Left-aligned text column (`max-w-3xl text-left`) restored with uncluttered space on the right side.
+   - Removed eyebrow chip (`"EdTech inquiries, handled transparently"`) completely.
+   - Background scrims adjusted (`radial-gradient(ellipse 70% 60% at 25% 45%, ...)` and horizontal falloff) to protect left-aligned text legibility.
+2. **React Bits GooeyNav Integration (`@react-bits/GooeyNav-TS-TW`)**:
+   - Added [GooeyNav.tsx](file:///c:/Users/Utkarsh%20Dubey/.gemini/antigravity/EdTech%20CRM%20&%20Inquiry%20System/frontend/src/components/ui/GooeyNav.tsx) with WebGL2 liquid blob physics, droplet emission, bezier curve animation, rim lighting, and active text clipping.
+   - Framed rounded pill styling with glass backdrop blur.
+   - Animated active liquid pill synchronizes with IntersectionObserver section scroll-spy and anchor clicks.
+   - Droplet burst color accents calibrated to brand palette (`#FFD60A`, `#FFE14D`, `#FB923C`).
+3. **Navbar Auth Links**:
+   - "Sign in" wired to `/admin/login`.
+   - "Sign up" wired to `/admin/login?mode=signup` with immediate registration mode toggle.
+   - "Track Inquiry" with Search icon integrated with client-side navigation.

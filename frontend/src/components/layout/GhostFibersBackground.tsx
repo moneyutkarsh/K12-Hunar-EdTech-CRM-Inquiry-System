@@ -390,11 +390,11 @@ export const GhostFibersBackground: React.FC<GhostFibersBackgroundProps> = ({
       )}
 
       {/* 3. Readability & Contrast Scrims */}
-      {/* (a) Soft radial scrim framing centered headline & text block (50% x, 40% y, fading outwards) */}
+      {/* (a) Soft radial scrim framing left-aligned headline & text block (25% x, 45% y) */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
-          background: 'radial-gradient(ellipse 75% 65% at 50% 40%, rgba(5, 5, 5, 0.90) 0%, rgba(5, 5, 5, 0.65) 45%, transparent 75%)',
+          background: 'radial-gradient(ellipse 70% 60% at 25% 45%, rgba(5, 5, 5, 0.88) 0%, rgba(5, 5, 5, 0.5) 50%, transparent 80%)',
         }}
       />
 

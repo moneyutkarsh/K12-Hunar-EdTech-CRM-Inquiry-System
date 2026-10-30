@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useNavigate, Navigate, Link } from 'react-router-dom';
+import { useNavigate, Navigate, Link, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../lib/api';
@@ -32,7 +32,16 @@ type AuthFormData = z.infer<typeof authFormSchema>;
 export const AdminLoginPage: React.FC = () => {
   const { isAuthenticated, login } = useAuth();
   const navigate = useNavigate();
-  const [mode, setMode] = useState<'login' | 'signup'>('login');
+  const [searchParams] = useSearchParams();
+  const [mode, setMode] = useState<'login' | 'signup'>(
+    searchParams.get('mode') === 'signup' ? 'signup' : 'login'
+  );
+
+  React.useEffect(() => {
+    const m = searchParams.get('mode');
+    if (m === 'signup') setMode('signup');
+    else if (m === 'login') setMode('login');
+  }, [searchParams]);
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [ssoModal, setSsoModal] = useState<null | 'google' | 'microsoft' | 'email'>(null);

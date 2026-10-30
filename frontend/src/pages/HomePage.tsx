@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion, useReducedMotion, AnimatePresence } from 'framer-motion';
+import { GooeyNav, type GooeyNavItem } from '../components/ui/GooeyNav';
 import {
-  Sparkles,
   ArrowRight,
   Search,
   CheckCircle2,
@@ -80,6 +80,41 @@ export const HomePage: React.FC = () => {
   const [activeSection, setActiveSection] = useState<string>('');
   const [hasScrolledPastHero, setHasScrolledPastHero] = useState(false);
   const [spotlightPos, setSpotlightPos] = useState<Record<string, { x: number; y: number } | null>>({});
+  const navigate = useNavigate();
+
+  const gooeyNavItems: GooeyNavItem[] = useMemo(
+    () => [
+      { label: 'Programs & Services', href: '#services' },
+      { label: "Who It's For", href: '#who' },
+      { label: 'How It Works', href: '#how-it-works' },
+      { label: 'FAQ', href: '#faq' },
+      {
+        label: 'Track Inquiry',
+        href: '/track',
+        icon: <Search className="w-3.5 h-3.5" />,
+        onClick: (e) => {
+          e.preventDefault();
+          navigate('/track');
+        },
+      },
+    ],
+    [navigate]
+  );
+
+  const sectionIndexMap: Record<string, number> = useMemo(
+    () => ({
+      services: 0,
+      who: 1,
+      'how-it-works': 2,
+      faq: 3,
+    }),
+    []
+  );
+
+  const activeNavIndex =
+    activeSection && sectionIndexMap[activeSection] !== undefined
+      ? sectionIndexMap[activeSection]
+      : 0;
 
   // Navbar glass transition on scroll (24px threshold)
   useEffect(() => {
@@ -241,52 +276,33 @@ export const HomePage: React.FC = () => {
             </span>
           </Link>
 
-          {/* Desktop Navigation Links with Sliding Active Underline */}
-          <nav className="hidden md:flex items-center gap-1 text-xs font-semibold text-[#A3A3A3] relative" aria-label="Main Navigation">
-            {[
-              { id: 'services', label: 'Programs & Services', href: '#services' },
-              { id: 'who', label: "Who It's For", href: '#who' },
-              { id: 'how-it-works', label: 'How It Works', href: '#how-it-works' },
-              { id: 'faq', label: 'FAQ', href: '#faq' },
-            ].map((link) => {
-              const isActive = activeSection === link.id;
-              return (
-                <a
-                  key={link.id}
-                  href={link.href}
-                  className={`relative px-3 py-1.5 transition-colors focus:outline-none focus:ring-2 focus:ring-[#FFD60A] rounded-md ${isActive ? 'text-[#F5F5F5]' : 'hover:text-[#F5F5F5]'
-                    }`}
-                >
-                  <span>{link.label}</span>
-                  {isActive && (
-                    <motion.div
-                      layoutId="nav-active-pill"
-                      className="absolute bottom-0 left-2 right-2 h-0.5 bg-[#FFD60A] rounded-full"
-                      transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                    />
-                  )}
-                </a>
-              );
-            })}
-            <Link
-              to="/track"
-              className="flex items-center gap-1 ml-3 px-3 py-1.5 text-[#A3A3A3] hover:text-[#FFD60A] transition-colors focus:outline-none focus:ring-2 focus:ring-[#FFD60A] rounded-md"
-            >
-              <Search className="w-3.5 h-3.5" />
-              <span>Track Inquiry</span>
-            </Link>
-          </nav>
+          {/* Desktop GooeyNav Navigation Bar (React Bits Liquid Blob Physics) */}
+          <div className="hidden md:flex items-center">
+            <GooeyNav
+              items={gooeyNavItems}
+              activeIndex={activeNavIndex}
+              color="#FFD60A"
+              activeTextColor="#0A0A0A"
+              theme="dark"
+              size="sm"
+              frame={true}
+              gooeyness={0.55}
+              particleCount={14}
+              animationTime={500}
+              wobble={0.45}
+            />
+          </div>
 
-          {/* CTA & Sign in Link */}
+          {/* CTA & Sign in / Sign up Links */}
           <div className="hidden sm:flex items-center gap-3">
             <Link
               to="/admin/login"
-              className="px-3 py-1.5 rounded-lg text-xs font-medium text-[#A3A3A3] hover:text-[#F5F5F5] hover:bg-white/5 transition-colors focus:outline-none focus:ring-2 focus:ring-[#FFD60A]"
+              className="px-3.5 py-2 rounded-lg text-xs font-semibold text-[#A3A3A3] hover:text-[#F5F5F5] hover:bg-white/5 transition-colors focus:outline-none focus:ring-2 focus:ring-[#FFD60A]"
             >
               Sign in
             </Link>
             <Link
-              to="/inquiry"
+              to="/admin/login?mode=signup"
               className="btn-shine-effect px-4 py-2 rounded-xl bg-[#FFD60A] hover:bg-[#FFE14D] active:scale-[0.98] text-[#0A0A0A] text-xs font-bold shadow-md transition-all flex items-center gap-1.5 group cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#FFD60A]/50 focus:ring-offset-2 focus:ring-offset-[#050505]"
             >
               <span>Sign up</span>
@@ -355,7 +371,7 @@ export const HomePage: React.FC = () => {
 
             <div className="pt-6 border-t border-white/10 flex flex-col gap-3">
               <Link
-                to="/inquiry"
+                to="/admin/login?mode=signup"
                 onClick={() => setIsMobileMenuOpen(false)}
                 className="btn-shine-effect w-full py-4 rounded-xl bg-[#FFD60A] active:scale-[0.98] text-[#0A0A0A] font-bold text-center text-base shadow-lg shadow-[#FFD60A]/10 min-h-[44px] flex items-center justify-center gap-2"
               >
@@ -376,143 +392,139 @@ export const HomePage: React.FC = () => {
 
       {/* Main Page Landmark */}
       <main id="main-content" className="pt-16">
-        {/* 2. Centered Impactful Hero Section */}
+        {/* 2. Left-Aligned Impactful Hero Section */}
         <section
           id="home-hero-section"
-          className="relative min-h-[calc(100svh-4rem)] flex flex-col justify-center items-center text-center px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto pt-12 pb-20"
+          className="relative min-h-[calc(100svh-4rem)] flex flex-col justify-center px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto pt-16 pb-24"
         >
-          {/* Eyebrow Chip (Static, zero animation) */}
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FFD60A]/10 border border-[#FFD60A]/30 text-[#FFD60A] text-xs font-semibold mb-8 mx-auto">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>EdTech inquiries, handled transparently</span>
-          </div>
-
-          {/* Headline with word stagger, clamp, text-wrap balance, and animated underline */}
-          <h1
-            className="font-extrabold text-[#F5F5F5] tracking-tight leading-[1.04] mb-8 max-w-4xl mx-auto"
-            style={{
-              fontSize: 'clamp(2.75rem, 6vw, 5.25rem)',
-              letterSpacing: '-0.035em',
-              textWrap: 'balance',
-            }}
-          >
-            {headlineWords.map((word, idx) => (
-              <motion.span
-                key={idx}
-                initial={prefersReducedMotion ? false : { opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{
-                  duration: 0.35,
-                  delay: idx * MOTION_CONSTANTS.heroLoadSequence.headlineWordStagger,
-                }}
-                className="inline-block mr-2.5 sm:mr-3.5"
-              >
-                {word}
-              </motion.span>
-            ))}
-            <span className="relative inline-block text-[#FFD60A]">
-              <motion.span
-                initial={prefersReducedMotion ? false : { opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.2 }}
-                className="inline-block"
-              >
-                {headlineAccent}
-              </motion.span>
-              {/* Thin animated SVG underline stroke */}
-              <svg
-                className="absolute -bottom-2 left-0 w-full h-2 overflow-visible pointer-events-none"
-                viewBox="0 0 240 8"
-                fill="none"
-                aria-hidden="true"
-              >
-                <motion.path
-                  d="M2 6C60 2 180 2 238 6"
-                  stroke="#FFD60A"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  initial={prefersReducedMotion ? false : { pathLength: 0, opacity: 0 }}
-                  animate={{ pathLength: 1, opacity: 1 }}
-                  transition={{ duration: 0.65, delay: 0.45, ease: 'easeOut' }}
-                />
-              </svg>
-            </span>
-          </h1>
-
-          {/* Subheading: #B8B8B8, max-w-56ch, text-wrap pretty, centered */}
-          <motion.p
-            initial={prefersReducedMotion ? false : { opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.35, delay: MOTION_CONSTANTS.heroLoadSequence.subhead }}
-            className="text-[#B8B8B8] leading-[1.65] mb-10 mx-auto"
-            style={{
-              maxWidth: '54ch',
-              fontSize: 'clamp(1.05rem, 1.4vw, 1.25rem)',
-              textWrap: 'pretty',
-            }}
-          >
-            Connect directly with the K12 Hunar admissions committee, merit scholarship board, and festival teams. Every inquiry receives a dedicated{' '}
-            <span className="text-[#F5F5F5] font-medium">reference code</span> and a guaranteed{' '}
-            <span className="text-[#F5F5F5] font-medium">24-hour response</span>.
-          </motion.p>
-
-          {/* Dual CTAs (Phase 4: light-sweep shine, arrow nudge, press scale 0.98, focus ring) */}
-          <motion.div
-            initial={prefersReducedMotion ? false : { opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.35, delay: MOTION_CONSTANTS.heroLoadSequence.ctas }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-3.5 w-full sm:w-auto"
-          >
-            <Link
-              to="/inquiry"
-              className="btn-shine-effect w-full sm:w-auto px-8 py-4 rounded-xl bg-[#FFD60A] hover:bg-[#FFE14D] active:scale-[0.98] text-[#0A0A0A] font-bold text-sm shadow-xl shadow-[#FFD60A]/15 transition-all flex items-center justify-center gap-2 group cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#FFD60A]/50 focus:ring-offset-2 focus:ring-offset-[#050505] min-h-[44px]"
+          <div className="max-w-3xl text-left">
+            {/* Headline with word stagger, clamp, text-wrap balance, and animated underline */}
+            <h1
+              className="font-extrabold text-[#F5F5F5] tracking-tight leading-[1.04] mb-8"
+              style={{
+                fontSize: 'clamp(2.75rem, 5.8vw, 5.25rem)',
+                letterSpacing: '-0.035em',
+                textWrap: 'balance',
+              }}
             >
-              <span>Submit an inquiry</span>
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </Link>
-            <Link
-              to="/track"
-              className="glass-card w-full sm:w-auto px-7 py-4 rounded-xl hover:border-[#FFD60A]/50 hover:bg-white/[0.08] text-[#F5F5F5] font-semibold text-sm transition-all flex items-center justify-center gap-2 group cursor-pointer active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-[#FFD60A]/50 focus:ring-offset-2 focus:ring-offset-[#050505] min-h-[44px]"
-            >
-              <Search className="w-4 h-4 text-[#FFD60A] group-hover:scale-110 transition-transform" />
-              <span>Track existing inquiry</span>
-            </Link>
-          </motion.div>
-
-          {/* Reassurance Microcopy */}
-          <motion.p
-            initial={prefersReducedMotion ? false : { opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.35, delay: 0.48 }}
-            className="text-xs text-[#A3A3A3] mb-12"
-          >
-            {REASSURANCE_COPY}
-          </motion.p>
-
-          {/* Trust Badges Row (Centered, uniform height, brand yellow icons) */}
-          <motion.div
-            initial={prefersReducedMotion ? false : { opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.35, delay: MOTION_CONSTANTS.heroLoadSequence.chips }}
-            className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 max-w-3xl w-full mx-auto"
-          >
-            {[
-              { icon: Clock, text: 'Guaranteed reply in 24h' },
-              { icon: Layers, text: '4 dedicated tracks' },
-              { icon: ShieldCheck, text: 'Verified counselor response' },
-            ].map((chip, idx) => {
-              const Icon = chip.icon;
-              return (
-                <div
+              {headlineWords.map((word, idx) => (
+                <motion.span
                   key={idx}
-                  className="p-3.5 rounded-xl bg-white/[0.03] border border-white/10 hover:border-[#FFD60A]/30 transition-colors flex items-center justify-center gap-2.5 h-12"
+                  initial={prefersReducedMotion ? false : { opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{
+                    duration: 0.35,
+                    delay: idx * MOTION_CONSTANTS.heroLoadSequence.headlineWordStagger,
+                  }}
+                  className="inline-block mr-2.5 sm:mr-3.5"
                 >
-                  <Icon className="w-4 h-4 text-[#FFD60A] shrink-0" />
-                  <span className="text-xs text-[#F5F5F5] font-medium">{chip.text}</span>
-                </div>
-              );
-            })}
-          </motion.div>
+                  {word}
+                </motion.span>
+              ))}
+              <span className="relative inline-block text-[#FFD60A]">
+                <motion.span
+                  initial={prefersReducedMotion ? false : { opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.2 }}
+                  className="inline-block"
+                >
+                  {headlineAccent}
+                </motion.span>
+                {/* Thin animated SVG underline stroke */}
+                <svg
+                  className="absolute -bottom-2 left-0 w-full h-2 overflow-visible pointer-events-none"
+                  viewBox="0 0 240 8"
+                  fill="none"
+                  aria-hidden="true"
+                >
+                  <motion.path
+                    d="M2 6C60 2 180 2 238 6"
+                    stroke="#FFD60A"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    initial={prefersReducedMotion ? false : { pathLength: 0, opacity: 0 }}
+                    animate={{ pathLength: 1, opacity: 1 }}
+                    transition={{ duration: 0.65, delay: 0.45, ease: 'easeOut' }}
+                  />
+                </svg>
+              </span>
+            </h1>
+
+            {/* Subheading: #B8B8B8, max-w-56ch, text-wrap pretty */}
+            <motion.p
+              initial={prefersReducedMotion ? false : { opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.35, delay: MOTION_CONSTANTS.heroLoadSequence.subhead }}
+              className="text-[#B8B8B8] leading-[1.65] mb-8"
+              style={{
+                maxWidth: '54ch',
+                fontSize: 'clamp(1.05rem, 1.4vw, 1.25rem)',
+                textWrap: 'pretty',
+              }}
+            >
+              Connect directly with the K12 Hunar admissions committee, merit scholarship board, and festival teams. Every inquiry receives a dedicated{' '}
+              <span className="text-[#F5F5F5] font-medium">reference code</span> and a guaranteed{' '}
+              <span className="text-[#F5F5F5] font-medium">24-hour response</span>.
+            </motion.p>
+
+            {/* Dual CTAs */}
+            <motion.div
+              initial={prefersReducedMotion ? false : { opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.35, delay: MOTION_CONSTANTS.heroLoadSequence.ctas }}
+              className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 mb-3"
+            >
+              <Link
+                to="/inquiry"
+                className="btn-shine-effect px-6 py-3.5 rounded-xl bg-[#FFD60A] hover:bg-[#FFE14D] active:scale-[0.98] text-[#0A0A0A] font-bold text-sm shadow-lg shadow-[#FFD60A]/15 transition-all flex items-center justify-center gap-2 group cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#FFD60A]/50 focus:ring-offset-2 focus:ring-offset-[#050505] min-h-[44px]"
+              >
+                <span>Submit an inquiry</span>
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </Link>
+              <Link
+                to="/track"
+                className="glass-card px-6 py-3.5 rounded-xl hover:border-[#FFD60A]/50 hover:bg-white/[0.08] text-[#F5F5F5] font-semibold text-sm transition-all flex items-center justify-center gap-2 group cursor-pointer active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-[#FFD60A]/50 focus:ring-offset-2 focus:ring-offset-[#050505] min-h-[44px]"
+              >
+                <Search className="w-4 h-4 text-[#FFD60A] group-hover:scale-110 transition-transform" />
+                <span>Track existing inquiry</span>
+              </Link>
+            </motion.div>
+
+            {/* Reassurance Microcopy */}
+            <motion.p
+              initial={prefersReducedMotion ? false : { opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.35, delay: 0.48 }}
+              className="text-xs text-[#A3A3A3] mb-8"
+            >
+              {REASSURANCE_COPY}
+            </motion.p>
+
+            {/* Trust Badges Row */}
+            <motion.div
+              initial={prefersReducedMotion ? false : { opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.35, delay: MOTION_CONSTANTS.heroLoadSequence.chips }}
+              className="grid grid-cols-1 sm:grid-cols-3 gap-3"
+            >
+              {[
+                { icon: Clock, text: 'Guaranteed reply in 24h' },
+                { icon: Layers, text: '4 dedicated tracks' },
+                { icon: ShieldCheck, text: 'Verified counselor response' },
+              ].map((chip, idx) => {
+                const Icon = chip.icon;
+                return (
+                  <div
+                    key={idx}
+                    className="p-3.5 rounded-xl bg-white/[0.03] border border-white/10 hover:border-[#FFD60A]/30 transition-colors flex items-center gap-2.5 h-12"
+                  >
+                    <Icon className="w-4 h-4 text-[#FFD60A] shrink-0" />
+                    <span className="text-xs text-[#F5F5F5] font-medium">{chip.text}</span>
+                  </div>
+                );
+              })}
+            </motion.div>
+          </div>
 
           {/* Scroll Cue at Bottom of Hero */}
           {!hasScrolledPastHero && !prefersReducedMotion && (
