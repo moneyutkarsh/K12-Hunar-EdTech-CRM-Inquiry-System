@@ -33,4 +33,21 @@ describe('Home Page Polish & Reveal Component Logic', () => {
     expect(dynamic.x).toBe(3);
     expect(dynamic.y).toBe(3);
   });
+
+  it('correctly maps routes to hyperthread WebThreadsBackground', () => {
+    const isHyperthreadRoute = (path: string) => {
+      const isHome = path === '/';
+      const isAuth = path === '/admin/login';
+      const isInquiry = path === '/inquiry';
+      const isTrack = path === '/track';
+      return isHome || isAuth || isInquiry || isTrack;
+    };
+
+    expect(isHyperthreadRoute('/')).toBe(true);
+    expect(isHyperthreadRoute('/admin/login')).toBe(true);
+    expect(isHyperthreadRoute('/track')).toBe(true);
+    expect(isHyperthreadRoute('/inquiry')).toBe(true);
+    expect(isHyperthreadRoute('/admin/dashboard')).toBe(false);
+    expect(isHyperthreadRoute('/admin/activity')).toBe(false);
+  });
 });

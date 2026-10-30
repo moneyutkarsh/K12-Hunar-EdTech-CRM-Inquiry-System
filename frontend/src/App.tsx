@@ -44,12 +44,14 @@ const AppLayout: React.FC = () => {
   const location = useLocation();
   const isHome = location.pathname === '/';
   const isAuth = location.pathname === '/admin/login';
+  const isInquiry = location.pathname === '/inquiry';
+  const isTrack = location.pathname === '/track';
   const isDashboard = location.pathname.startsWith('/admin') && !isAuth;
 
   return (
     <div className="relative min-h-screen text-[#F5F5F5] flex flex-col font-sans selection:bg-[#FFD60A] selection:text-[#0A0A0A] bg-[#050505]">
-      {/* Background layer: WebThreads hyperthread on Home (/) and Sign in / Sign up (/admin/login), GridScan on /admin, AeroShards on /inquiry, /track */}
-      {isHome || isAuth ? (
+      {/* Background layer: WebThreads hyperthread on Home (/), Sign in / Sign up (/admin/login), Inquiry (/inquiry), and Tracker (/track); GridScan on /admin dashboard */}
+      {isHome || isAuth || isInquiry || isTrack ? (
         <WebThreadsBackground />
       ) : isDashboard ? (
         <GridScanBackground />

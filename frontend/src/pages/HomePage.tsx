@@ -406,6 +406,7 @@ export const HomePage: React.FC = () => {
                 fontSize: 'clamp(2.75rem, 5.8vw, 5.25rem)',
                 letterSpacing: '-0.035em',
                 textWrap: 'balance',
+                textShadow: '0 2px 24px rgba(0,0,0,0.85), 0 4px 48px rgba(0,0,0,0.95)',
               }}
             >
               {headlineWords.map((word, idx) => (
@@ -461,6 +462,7 @@ export const HomePage: React.FC = () => {
                 maxWidth: '54ch',
                 fontSize: 'clamp(1.05rem, 1.4vw, 1.25rem)',
                 textWrap: 'pretty',
+                textShadow: '0 2px 14px rgba(0,0,0,0.85)',
               }}
             >
               Connect directly with the K12 Hunar admissions committee, merit scholarship board, and festival teams. Every inquiry receives a dedicated{' '}
