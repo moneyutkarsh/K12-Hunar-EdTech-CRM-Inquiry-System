@@ -1,0 +1,38 @@
+diff --git a/README.md b/README.md
+--- a/README.md
++++ b/README.md
+@@ -289,8 +289,8 @@
+-- [ADR-001: Supabase Session Pooler (Port 6543)](file:///c:/Users/Utkarsh%20Dubey/.gemini/antigravity/EdTech%20CRM%20&%20Inquiry%20System/docs/ADR/ADR-001-supabase-pooler.md)
+-- [ADR-002: JWT Bearer Tokens vs Cookies](file:///c:/Users/Utkarsh%20Dubey/.gemini/antigravity/EdTech%20CRM%20&%20Inquiry%20System/docs/ADR/ADR-002-jwt-vs-cookies.md)
+-- [ADR-003: Timing-Safe Auth & Brute-Force Lockout](file:///c:/Users/Utkarsh%20Dubey/.gemini/antigravity/EdTech%20CRM%20&%20Inquiry%20System/docs/ADR/ADR-003-timing-safe-auth.md)
+-- [ADR-004: Server-Side Filtering, Search & Window Pagination](file:///c:/Users/Utkarsh%20Dubey/.gemini/antigravity/EdTech%20CRM%20&%20Inquiry%20System/docs/ADR/ADR-004-server-side-filtering.md)
+-- [ADR-005: AeroShards WebGL Background & Fallback](file:///c:/Users/Utkarsh%20Dubey/.gemini/antigravity/EdTech%20CRM%20&%20Inquiry%20System/docs/ADR/ADR-005-webgl-background-fallback.md)
+-- [Database ER Diagram](file:///c:/Users/Utkarsh%20Dubey/.gemini/antigravity/EdTech%20CRM%20&%20Inquiry%20System/docs/ER-DIAGRAM.md)
+-- [System Architecture & Sequence Flows](file:///c:/Users/Utkarsh%20Dubey/.gemini/antigravity/EdTech%20CRM%20&%20Inquiry%20System/docs/ARCHITECTURE.md)
+-- [Production Deployment Checklist](file:///c:/Users/Utkarsh%20Dubey/.gemini/antigravity/EdTech%20CRM%20&%20Inquiry%20System/docs/DEPLOY-CHECKLIST.md)
++- [ADR-001: Supabase Pooler Architecture](docs/ADR/ADR-001-supabase-pooler.md)
++- [ADR-002: JWT Bearer Tokens vs Cookies](docs/ADR/ADR-002-jwt-vs-cookies.md)
++- [ADR-003: Timing-Safe Auth & Brute-Force Lockout](docs/ADR/ADR-003-timing-safe-auth.md)
++- [ADR-004: Server-Side Filtering, Search & Window Pagination](docs/ADR/ADR-004-server-side-filtering.md)
++- [ADR-005: AeroShards WebGL Background & Fallback](docs/ADR/ADR-005-webgl-background-fallback.md)
++- [Database ER Diagram](docs/ER-DIAGRAM.md)
++- [System Architecture & Sequence Flows](docs/ARCHITECTURE.md)
++- [Production Deployment Checklist](docs/DEPLOY-CHECKLIST.md)
+diff --git a/backend/.env.example b/backend/.env.example
+--- a/backend/.env.example
++++ b/backend/.env.example
+@@ -7,4 +7,4 @@
+-# Supabase PostgreSQL Session Pooler connection string (Port 5432)
+-# IMPORTANT: Supabase direct connection is IPv6-only. Use the Session Pooler connection string below on Render/Vercel:
+-# Format: postgresql://postgres.<PROJECT_REF>:<PASSWORD>@aws-0-<REGION>.pooler.supabase.com:5432/postgres
+-DATABASE_URL=postgresql://postgres.yourprojectref:yourpassword@aws-0-us-east-1.pooler.supabase.com:5432/postgres
++# Supabase PostgreSQL Pooler connection string (Port 6543 for Transaction mode, 5432 for Session mode)
++# IMPORTANT: Supabase direct connection is IPv6-only. Use the Pooler connection string on Render/Vercel:
++# Format: postgresql://postgres.<PROJECT_REF>:<PASSWORD>@aws-0-<REGION>.pooler.supabase.com:6543/postgres
++DATABASE_URL=postgresql://postgres.yourprojectref:yourpassword@aws-0-us-east-1.pooler.supabase.com:6543/postgres
+diff --git a/frontend/src/pages/HomePage.tsx b/frontend/src/pages/HomePage.tsx
+--- a/frontend/src/pages/HomePage.tsx
++++ b/frontend/src/pages/HomePage.tsx
+@@ -526,2 +526,2 @@
+-                  { icon: Clock, text: 'Guaranteed reply in 24h' },
++                  { icon: Clock, text: 'Target response: 24h' },
