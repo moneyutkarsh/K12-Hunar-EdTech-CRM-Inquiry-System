@@ -59,7 +59,7 @@ Key Highlights of the Delivery:
 Project Links:
 - Live Frontend: https://k12-hunar-crm.vercel.app
 - Live Backend & OpenAPI Swagger: https://k12-hunar-crm.onrender.com/api/docs
-- GitHub Repository: [Repository URL]
+- GitHub Repository: https://github.com/moneyutkarsh/K12-Hunar-EdTech-CRM-Inquiry-System
 - Evaluator Credentials: admin@k12hunar.com / Admin@12345 (or 1-click Demo Fill on login)
 
 A comprehensive Evaluator Quick Path and 90-second demo walkthrough are documented in the README and docs/DEMO-SCRIPT.md.
@@ -75,7 +75,7 @@ Utkarsh Dubey
 ### Live Application Links & Credentials
 - **Frontend Application**: `https://k12-hunar-crm.vercel.app` *(Deployable to Vercel)*
 - **Backend API & Swagger Docs**: `https://k12-hunar-crm.onrender.com/api/docs` *(Deployable to Render)*
-- **GitHub Repository**: `[Your Repository URL]`
+- **GitHub Repository**: `https://github.com/moneyutkarsh/K12-Hunar-EdTech-CRM-Inquiry-System`
 
 #### Administrative Test Credentials
 - **Admin Email**: `admin@k12hunar.com`
