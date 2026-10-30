@@ -389,28 +389,20 @@ export const GhostFibersBackground: React.FC<GhostFibersBackgroundProps> = ({
         </div>
       )}
 
-      {/* 3. Readability & Contrast Scrims (Phase 1) */}
-      {/* (a) Soft radial scrim directly behind the left headline & text block (25% x, 45% y, fading by 60%) */}
+      {/* 3. Readability & Contrast Scrims */}
+      {/* (a) Soft radial scrim framing centered headline & text block (50% x, 40% y, fading outwards) */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
-          background: 'radial-gradient(ellipse 65% 55% at 25% 45%, rgba(5, 5, 5, 0.88) 0%, rgba(5, 5, 5, 0.65) 40%, transparent 68%)',
+          background: 'radial-gradient(ellipse 75% 65% at 50% 40%, rgba(5, 5, 5, 0.90) 0%, rgba(5, 5, 5, 0.65) 45%, transparent 75%)',
         }}
       />
 
-      {/* (b) Left-to-right gradient scrim keeping left side serene and right side vibrant */}
+      {/* (b) Bottom vertical gradient fading cleanly into solid obsidian #050505 */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
-          background: 'linear-gradient(to right, rgba(5, 5, 5, 0.75) 0%, rgba(5, 5, 5, 0.35) 45%, transparent 80%)',
-        }}
-      />
-
-      {/* (c) Bottom vertical gradient fading cleanly into solid obsidian #050505 */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background: 'linear-gradient(to bottom, transparent 40%, rgba(5, 5, 5, 0.7) 70%, #050505 100%)',
+          background: 'linear-gradient(to bottom, transparent 35%, rgba(5, 5, 5, 0.75) 70%, #050505 100%)',
         }}
       />
 

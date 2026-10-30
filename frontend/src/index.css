@@ -131,21 +131,6 @@
   100% { transform: translate3d(-25px, 25px, 0) scale(1.05); }
 }
 
-@keyframes float-chip-1 {
-  0% { transform: translateY(0px); }
-  100% { transform: translateY(-8px); }
-}
-
-@keyframes float-chip-2 {
-  0% { transform: translateY(0px); }
-  100% { transform: translateY(7px); }
-}
-
-@keyframes float-chip-3 {
-  0% { transform: translateY(0px); }
-  100% { transform: translateY(-6px); }
-}
-
 @keyframes bob-cue {
   0%, 100% { transform: translateY(0px); }
   50% { transform: translateY(6px); }
