@@ -1,0 +1,23 @@
+﻿services:
+  - type: web
+    name: k12-hunar-crm-backend
+    runtime: node
+    rootDir: backend
+    plan: free
+    region: oregon
+    buildCommand: npm install
+    startCommand: node src/scripts/migrate.js && node src/server.js
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CLIENT_URL
+        value: "*"
+      - key: ADMIN_EMAIL
+        value: admin@k12hunar.com
+      - key: ADMIN_PASSWORD
+        sync: false

@@ -207,3 +207,11 @@ Saved before and after full-page captures:
 * **`docs/ATTRIBUTIONS.md`**: Added React Bits GooeyNav component attribution.
 * **`docs/FREE-TIER-NOTES.md`**: New operational document detailing Render cold start, Supabase pausing rules, and zero keep-alive pingers in application code.
 * **`frontend/src/features/home/FeaturedProgramsCarousel.tsx` & `frontend/src/pages/AdminLoginPage.tsx`**: Cleaned up unreferenced TypeScript symbols (`useMemo`, `openVerificationModal`) to pass `tsc -b` typecheck.
+
+* **`frontend/vercel.json`**: Added non-behavioral security headers (`X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()`, `X-Frame-Options: DENY`) and `Content-Security-Policy-Report-Only` per ADR-006 while keeping the SPA rewrite rule intact.
+* **`render.yaml`**: Infrastructure-as-code blueprint for automated Render Web Service deployment.
+* **`vercel.json`**: Root-level deployment fallback configuration for Vercel monorepo builds.
+* **`docs/DEPLOYMENT-GUIDE.md`**: Complete step-by-step production deployment manual for Vercel and Render.
+* **`docs/ADR/ADR-006-csp-enforcement.md`**: Architectural Decision Record detailing Report-Only CSP policy and the 14-day promotion roadmap.
+* **`docs/audits/csp.md`**: Audit and console inspection guide for CSP violations.
+* **`docs/audits/optional-features.md`**: Evaluation findings for optional additive features (A6.1, A6.2, A6.3).
