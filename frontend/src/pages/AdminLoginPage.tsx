@@ -138,18 +138,7 @@ export const AdminLoginPage: React.FC = () => {
     return () => clearInterval(timer);
   }, [resendCountdown]);
 
-  const openVerificationModal = (
-    provider: 'google' | 'email',
-    prefillEmail?: string
-  ) => {
-    setSsoModal(provider);
-    setSsoStep('email');
-    setOtpCode('');
-    setPreviewCode(null);
-    if (prefillEmail) {
-      setCustomSsoEmail(prefillEmail);
-    }
-  };
+  
 
   const handleSendOtp = async (targetEmail?: string) => {
     const emailToSend = (targetEmail || customSsoEmail).toLowerCase().trim();

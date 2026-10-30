@@ -173,7 +173,7 @@ Saved before and after full-page captures:
    - Removed eyebrow chip (`"EdTech inquiries, handled transparently"`) completely.
    - Background scrims adjusted (`radial-gradient(ellipse 70% 60% at 25% 45%, ...)` and horizontal falloff) to protect left-aligned text legibility.
 2. **React Bits GooeyNav Integration (`@react-bits/GooeyNav-TS-TW`)**:
-   - Added [GooeyNav.tsx](file:///c:/Users/Utkarsh%20Dubey/.gemini/antigravity/EdTech%20CRM%20&%20Inquiry%20System/frontend/src/components/ui/GooeyNav.tsx) with WebGL2 liquid blob physics, droplet emission, bezier curve animation, rim lighting, and active text clipping.
+   - Added [GooeyNav.tsx](frontend/src/components/ui/GooeyNav.tsx) with WebGL2 liquid blob physics, droplet emission, bezier curve animation, rim lighting, and active text clipping.
    - Framed rounded pill styling with glass backdrop blur.
    - Animated active liquid pill synchronizes with IntersectionObserver section scroll-spy and anchor clicks.
    - Droplet burst color accents calibrated to brand palette (`#FFD60A`, `#FFE14D`, `#FB923C`).
@@ -181,3 +181,29 @@ Saved before and after full-page captures:
    - "Sign in" wired to `/admin/login`.
    - "Sign up" wired to `/admin/login?mode=signup` with immediate registration mode toggle.
    - "Track Inquiry" with Search icon integrated with client-side navigation.
+
+
+---
+
+## Additive Release Pack: Factual Corrections & Documentation Alignment (2026-10-30)
+
+### 1. Factual Corrections (Before vs. After)
+
+| Item | Before (Inaccurate / Machine-Specific) | After (Verified & Factually Correct) | Reason |
+| :--- | :--- | :--- | :--- |
+| **Documentation Links** | `file:///c:/Users/Utkarsh%20Dubey/.../docs/ADR/...` | `docs/ADR/...` | Machine-specific absolute URI broken on GitHub and evaluator clones. |
+| **Component Links** | `file:///c:/Users/Utkarsh%20Dubey/.../GooeyNav.tsx` | `frontend/src/components/ui/GooeyNav.tsx` | Replaced with clean repository-relative path. |
+| **Test Suite Count** | "30 Vitest unit and integration tests" | "88 Vitest unit & integration tests + 7 smoke assertions (100% green)" | Measured reality: 36 frontend + 52 backend vitest tests + 7 smoke steps. |
+| **Supabase Pooler Port** | `backend/.env.example` specified only port 5432 (Session) | Documented Port 6543 (Transaction) and Port 5432 (Session) | Supabase uses 6543 for transaction pooling and 5432 for session pooling. |
+
+### 2. Pre-Existing File Modification Justifications (`git diff --stat main...HEAD`)
+
+* **`README.md`**: Added "Evaluator Quick Path", "What's New in v2", updated test suite counts to measured facts, and converted absolute machine links to repo-relative links.
+* **`backend/.env.example`**: Clarified Supabase pooler ports (6543 transaction vs 5432 session).
+* **`docs/UPGRADE-LOG.md`**: Fixed absolute URI and appended additive release pack change justifications.
+* **`package.json`**: Added additive scripts `visual:check`, `audit:canvas`.
+
+* **`SUBMISSION.md`**: Updated test metrics to 88 passing tests, corrected pooler port distinction, and added the final submission email template and 5 core deliverables breakdown.
+* **`docs/ATTRIBUTIONS.md`**: Added React Bits GooeyNav component attribution.
+* **`docs/FREE-TIER-NOTES.md`**: New operational document detailing Render cold start, Supabase pausing rules, and zero keep-alive pingers in application code.
+* **`frontend/src/features/home/FeaturedProgramsCarousel.tsx` & `frontend/src/pages/AdminLoginPage.tsx`**: Cleaned up unreferenced TypeScript symbols (`useMemo`, `openVerificationModal`) to pass `tsc -b` typecheck.

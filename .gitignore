@@ -34,3 +34,7 @@ Thumbs.db
 *.suo
 *.ntvs*
 *.njsproj
+
+# Visual check temporary test outputs
+docs/screenshots/release-current/
+docs/screenshots/release-diff/

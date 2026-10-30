@@ -8,9 +8,57 @@
 A full-stack, production-grade EdTech Customer Relationship Management (CRM) and Inquiry System built with **React 18/19, Vite, TypeScript, Tailwind CSS, shadcn/ui**, and an **Express.js (Node 20+)** backend with custom timing-safe JWT authentication and **Supabase PostgreSQL** accessed strictly as plain relational Postgres via `pg.Pool` on port 6543.
 
 - 📚 **Interactive Swagger API Documentation**: `http://localhost:5000/api/docs` (or deployed at `/api/docs`)
-- 🧪 **Test Suite**: 30 Vitest unit and integration tests (100% green)
+- 🧪 **Automated Test Suite**: 88 Vitest unit & integration tests + 7 smoke assertions (100% green)
 
 ---
+
+---
+
+## ? Evaluator Quick Path
+
+| Key Resource | URL / Credential |
+| :--- | :--- |
+| **Live Frontend URL** | `https://k12-hunar-crm.vercel.app` *(or local: `http://localhost:5173`)* |
+| **Live API Backend URL** | `https://k12-hunar-crm.onrender.com/api` *(or local: `http://localhost:5000/api`)* |
+| **Interactive OpenAPI Docs** | `https://k12-hunar-crm.onrender.com/api/docs` *(or local: `/api/docs`)* |
+| **Documented Evaluator Account** | **Email:** `admin@k12hunar.com` &bull; **Password:** `Admin@12345` |
+
+> [!NOTE]
+> **Free-Tier Cold-Start Notice:** If accessing the live Render deployment after inactivity, the free-tier service spins down. The initial API health ping may take ~45?50 seconds to warm up the container. The frontend features an automatic server wakeup detection banner that resolves as soon as the API responds.
+
+### 6-Step Evaluator Walkthrough (Takes < 90 Seconds)
+1. **Submit an Inquiry (`/inquiry`):** Open the public inquiry form. Select `Parent` &rarr; `Scholarship`, enter your details, and submit.
+2. **Copy Reference Code:** Upon submission, an 8-character reference code (e.g. `KH-7F2K9M4X`) is generated and presented on screen with a one-click copy button.
+3. **Track Your Submission (`/track`):** Navigate to the Public Tracker. Enter the reference code and your registered email address to view live status and the estimated resolution timeline.
+4. **Sign In as Administrator (`/admin/login`):** Use the pre-filled quick demo credentials (`admin@k12hunar.com` / `Admin@12345`) or enter your email for OTP verification.
+5. **Manage & Update Status:** In the Admin Dashboard (`/admin`), locate the inquiry via the instant search filter (`/`), open the inquiry drawer, change the status to `In Progress`, set priority to `High`, and log an internal note.
+6. **Verify Audit Trail (`/admin/activity`):** Open the Activity feed to confirm that the status change and note are immediately reflected with actor attribution, timestamp, and metadata.
+
+---
+
+## ?? What's New in v2
+
+* **Home (`/`):** Redesigned editorial poster card carousel with technical grid overlays, live countdowns, Asia/Kolkata date tiles, interactive Liquid GooeyNav navigation, live aggregates counter, and FAQ accordion.
+* **Public Inquiry (`/inquiry`):** Split-pane design with real-time Zod validation, invisible honeypot bot trap, and instant reference code generation.
+* **Public Tracker (`/track`):** Privacy-safe public status lookup requiring both reference code and registered email, returning normalized stages without exposing PII.
+* **Admin Activity Audit Feed (`/admin/activity`):** Cursor-paginated immutable audit feed of all administrative actions, status transitions, priority changes, and counselor notes.
+* **Admin Settings & Security (`/admin/settings`):** Profile preferences, timing-safe password update with entropy complexity rules, instant session revocation via `token_version` invalidation (`/auth/logout-all`), and GPU background rendering toggles.
+* **Unique Reference Codes:** Algorithmic `KH-XXXXXXXX` identifier generated on submission for zero-friction inquiry tracking.
+* **Priority Routing & Assignment:** Native `High`, `Medium`, and `Low` priority classification with counselor assignment and related contact submission history count.
+* **Related Contacts Aggregation:** Real-time lookup grouping prior submissions from the same email with historical submission count badges.
+* **Automated Database Migrations:** Idempotent migration runner (`npm run db:migrate`) managing schema evolution across Supabase instances.
+* **New v2 OpenAPI Endpoints:**
+  * `POST /api/track` - Public inquiry status lookup
+  * `GET /api/public/stats` - Public resolved/active metrics
+  * `GET /api/activity` - Cursor-paginated admin audit log
+  * `GET /api/admins/options` - Active counselor directory for assignment
+  * `PATCH /api/inquiries/:id/priority` - Update inquiry priority
+  * `PATCH /api/inquiries/:id/assign` - Assign inquiry to administrator
+  * `PATCH /api/inquiries/bulk-status` - Batch status update
+  * `PATCH /api/auth/password` - Timing-safe password modification
+  * `POST /api/auth/logout-all` - Global session revocation
+  * `POST /api/auth/otp/send` - Branded 6-digit email OTP dispatch
+  * `POST /api/auth/otp/verify` - One-time password verification & session provisioning
 
 ## 📑 Table of Contents
 1. [Overview & Features](#overview--features)
@@ -286,14 +334,14 @@ curl -X PATCH http://localhost:5000/api/inquiries/<INQUIRY_UUID>/status \
 ## Architecture Decisions (ADR)
 
 Detailed engineering decision records are maintained in `/docs`:
-- [ADR-001: Supabase Session Pooler (Port 6543)](file:///c:/Users/Utkarsh%20Dubey/.gemini/antigravity/EdTech%20CRM%20&%20Inquiry%20System/docs/ADR/ADR-001-supabase-pooler.md)
-- [ADR-002: JWT Bearer Tokens vs Cookies](file:///c:/Users/Utkarsh%20Dubey/.gemini/antigravity/EdTech%20CRM%20&%20Inquiry%20System/docs/ADR/ADR-002-jwt-vs-cookies.md)
-- [ADR-003: Timing-Safe Auth & Brute-Force Lockout](file:///c:/Users/Utkarsh%20Dubey/.gemini/antigravity/EdTech%20CRM%20&%20Inquiry%20System/docs/ADR/ADR-003-timing-safe-auth.md)
-- [ADR-004: Server-Side Filtering, Search & Window Pagination](file:///c:/Users/Utkarsh%20Dubey/.gemini/antigravity/EdTech%20CRM%20&%20Inquiry%20System/docs/ADR/ADR-004-server-side-filtering.md)
-- [ADR-005: AeroShards WebGL Background & Fallback](file:///c:/Users/Utkarsh%20Dubey/.gemini/antigravity/EdTech%20CRM%20&%20Inquiry%20System/docs/ADR/ADR-005-webgl-background-fallback.md)
-- [Database ER Diagram](file:///c:/Users/Utkarsh%20Dubey/.gemini/antigravity/EdTech%20CRM%20&%20Inquiry%20System/docs/ER-DIAGRAM.md)
-- [System Architecture & Sequence Flows](file:///c:/Users/Utkarsh%20Dubey/.gemini/antigravity/EdTech%20CRM%20&%20Inquiry%20System/docs/ARCHITECTURE.md)
-- [Production Deployment Checklist](file:///c:/Users/Utkarsh%20Dubey/.gemini/antigravity/EdTech%20CRM%20&%20Inquiry%20System/docs/DEPLOY-CHECKLIST.md)
+- [ADR-001: Supabase Session Pooler (Port 6543)](docs/ADR/ADR-001-supabase-pooler.md)
+- [ADR-002: JWT Bearer Tokens vs Cookies](docs/ADR/ADR-002-jwt-vs-cookies.md)
+- [ADR-003: Timing-Safe Auth & Brute-Force Lockout](docs/ADR/ADR-003-timing-safe-auth.md)
+- [ADR-004: Server-Side Filtering, Search & Window Pagination](docs/ADR/ADR-004-server-side-filtering.md)
+- [ADR-005: AeroShards WebGL Background & Fallback](docs/ADR/ADR-005-webgl-background-fallback.md)
+- [Database ER Diagram](docs/ER-DIAGRAM.md)
+- [System Architecture & Sequence Flows](docs/ARCHITECTURE.md)
+- [Production Deployment Checklist](docs/DEPLOY-CHECKLIST.md)
 
 ---
 

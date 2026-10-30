@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+﻿import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
@@ -9,8 +9,6 @@ import {
   Share2,
   ChevronLeft,
   ChevronRight,
-  Pause,
-  Play,
   Check,
   ArrowRight,
 } from 'lucide-react';
@@ -30,7 +28,7 @@ interface FeaturedProgramsCarouselProps {
 export const FeaturedProgramsCarousel: React.FC<FeaturedProgramsCarouselProps> = ({ className = '' }) => {
   const [programs] = useState<Program[]>(() => getActivePrograms());
   const [activeIndex, setActiveIndex] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
+  const [isPaused] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const [clickPauseUntil, setClickPauseUntil] = useState<number>(0);
@@ -58,7 +56,6 @@ export const FeaturedProgramsCarousel: React.FC<FeaturedProgramsCarouselProps> =
   useEffect(() => {
     if (programs.length <= 1) return;
 
-    let startTime = Date.now();
     let accumulated = 0;
 
     const interval = setInterval(() => {
@@ -94,10 +91,6 @@ export const FeaturedProgramsCarousel: React.FC<FeaturedProgramsCarouselProps> =
   const handleNext = () => {
     pauseAfterClick();
     setActiveIndex((prev) => (prev + 1) % programs.length);
-  };
-
-  const handleTogglePause = () => {
-    setIsPaused((prev) => !prev);
   };
 
   const handleShare = async (e: React.MouseEvent, prog: Program) => {
