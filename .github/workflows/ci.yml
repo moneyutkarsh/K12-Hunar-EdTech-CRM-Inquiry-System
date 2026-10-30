@@ -1,12 +1,38 @@
-name: CI Pipeline
+﻿name: CI Pipeline
 
 on:
   push:
-    branches: [main, master]
+    branches: [main, master, chore/*, feat/*]
   pull_request:
     branches: [main, master]
 
 jobs:
+  security-and-lint:
+    name: Security & Link Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Gitleaks Security Scan
+        uses: gitleaks/gitleaks-action@v2
+        continue-on-error: true
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Run NPM Security Audit (High Level, Non-Blocking Advisory)
+        run: |
+          npm audit --audit-level=high || true
+          cd backend && npm audit --audit-level=high || true
+          cd ../frontend && npm audit --audit-level=high || true
+
+      - name: Markdown Links & Paths Integrity Check
+        run: node scripts/check-docs-links.mjs
+
   backend-test:
     name: Backend Test Suite
     runs-on: ubuntu-latest
@@ -47,3 +73,51 @@ jobs:
         env:
           VITE_API_URL: 'http://localhost:5000/api'
         run: npm run build
+
+  visual-regression:
+    name: Visual Regression (Playwright)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install Root & Frontend Dependencies
+        run: |
+          npm install
+          cd frontend && npm install
+          cd ../backend && npm install
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Start Servers & Run Visual Check
+        env:
+          USE_MOCK_DB: 'true'
+          JWT_SECRET: 'ci_test_super_secure_secret_key_minimum_32_characters'
+        run: |
+          cd backend && npm run dev &
+          cd frontend && npm run dev &
+          sleep 5
+          npm run visual:check
+
+  e2e-workflow:
+    name: Playwright E2E User Journey
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install Dependencies
+        run: |
+          npm install
+          cd frontend && npm install
+          cd ../backend && npm install
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Run E2E Suite (Skips Gracefully If DB Unreachable)
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          npm run e2e

@@ -12,7 +12,8 @@
     "test:all": "npm run test --prefix backend && npm run build --prefix frontend",
     "visual:check": "node scripts/visual-check.mjs",
     "audit:canvas": "node scripts/audit-canvas.mjs",
-    "e2e": "node scripts/e2e-workflow.mjs"
+    "e2e": "node scripts/e2e-workflow.mjs",
+    "audit:links": "node scripts/check-docs-links.mjs"
   },
   "devDependencies": {
     "pixelmatch": "^8.0.0",
