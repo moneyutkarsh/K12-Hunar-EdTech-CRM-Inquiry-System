@@ -169,6 +169,70 @@ export const openapiSpec = {
         },
       },
     },
+    '/auth/otp/send': {
+      post: {
+        summary: 'Send Verification OTP Code',
+        tags: ['Authentication'],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['email'],
+                properties: {
+                  email: { type: 'string', format: 'email', example: 'counselor@k12hunar.com' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          '200': { description: 'OTP dispatched via email or preview returned' },
+          '400': { description: 'Invalid email address' },
+          '429': { description: 'Rate limit exceeded' },
+        },
+      },
+    },
+    '/auth/otp/verify': {
+      post: {
+        summary: 'Verify OTP Code and Sign In',
+        tags: ['Authentication'],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['email', 'code'],
+                properties: {
+                  email: { type: 'string', format: 'email', example: 'counselor@k12hunar.com' },
+                  code: { type: 'string', example: '123456' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          '200': { description: 'OTP verified successfully with JWT and admin profile' },
+          '400': { description: 'Invalid or expired OTP code' },
+        },
+      },
+    },
+    '/auth/signup': {
+      post: {
+        summary: 'Admin Registration / Signup',
+        tags: ['Authentication'],
+        requestBody: {
+          required: true,
+          content: { 'application/json': { schema: { $ref: '#/components/schemas/LoginInput' } } },
+        },
+        responses: {
+          '201': { description: 'Admin registered successfully' },
+          '400': { description: 'Registration error or conflict' },
+        },
+      },
+    },
     '/inquiries': {
       post: {
         summary: 'Public Inquiry Submission',
@@ -203,6 +267,16 @@ export const openapiSpec = {
         },
       },
     },
+    '/inquiries/kpis': {
+      get: {
+        summary: 'Secondary Operational KPI Metrics',
+        security: [{ BearerAuth: [] }],
+        tags: ['Inquiries'],
+        responses: {
+          '200': { description: 'Secondary metrics including response times, unassigned counts, and priority distribution' },
+        },
+      },
+    },
     '/inquiries/stats': {
       get: {
         summary: 'Inquiry Overview Statistics',
@@ -230,6 +304,32 @@ export const openapiSpec = {
         tags: ['Inquiries'],
         responses: {
           '200': { description: 'CSV file attachment' },
+        },
+      },
+    },
+    '/inquiries/bulk-status': {
+      patch: {
+        summary: 'Bulk Update Status for Multiple Inquiries',
+        security: [{ BearerAuth: [] }],
+        tags: ['Inquiries'],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['ids', 'status'],
+                properties: {
+                  ids: { type: 'array', items: { type: 'string', format: 'uuid' } },
+                  status: { type: 'string', enum: ['New', 'In Progress', 'Resolved', 'Dismissed'] },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          '200': { description: 'Batch updated count and status' },
+          '400': { description: 'Invalid inquiry IDs or target status' },
         },
       },
     },

@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+﻿#!/usr/bin/env node
 
 /**
  * K12 Hunar CRM - Production Smoke Test Script
@@ -10,7 +10,7 @@ const API_URL = process.env.API_URL || 'http://localhost:5000/api';
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@k12hunar.com';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Admin@12345';
 
-console.log('🔥 Running Production Smoke Test against:', API_URL);
+console.log('Running Production Smoke Test against:', API_URL);
 
 async function request(path, options = {}) {
   const url = `${API_URL}${path}`;
@@ -54,19 +54,21 @@ async function run() {
     assert(health.status === 200 && health.data.status === 'ok', '1. GET /health returns 200 { status: "ok" }');
 
     // 2. Submit Public Inquiry
+    const smokeEmail = `smoke.${Date.now()}@example.com`;
     const submit = await request('/inquiries', {
       method: 'POST',
       body: {
         userType: 'Parent',
         category: 'Admission',
         name: 'Smoke Test Visitor',
-        email: `smoke.${Date.now()}@example.com`,
+        email: smokeEmail,
         phone: '+91 98765 00000',
         message: 'This is an automated smoke test inquiry to verify deployed backend pipeline.',
       },
     });
     assert(submit.status === 201 && submit.data.data?.id, '2. POST /inquiries creates inquiry record');
     const createdId = submit.data.data?.id;
+    const referenceCode = submit.data.data?.referenceCode;
 
     // 3. Admin Login
     const login = await request('/auth/login', {
@@ -98,6 +100,29 @@ async function run() {
     // 7. Check 30-Day Analytics
     const analytics = await request('/inquiries/analytics', { headers: authHeaders });
     assert(analytics.status === 200 && Array.isArray(analytics.data.data?.daily), '7. GET /inquiries/analytics returns 30-day series');
+
+    // 8. Public Tracker Verification
+    if (referenceCode) {
+      const track = await request('/track', {
+        method: 'POST',
+        body: { reference: referenceCode, email: smokeEmail },
+      });
+      assert(track.status === 200 && (track.data?.status === 'In Progress' || track.data?.status === 'New'), '8. POST /track resolves inquiry status');
+    }
+
+    // 9. Public Aggregated Stats Verification
+    const pubStats = await request('/public/stats');
+    assert(pubStats.status === 200 && typeof pubStats.data?.handledApprox === 'number', '9. GET /public/stats returns public metrics');
+
+    // 10. Activity Audit Log Verification
+    const activity = await request('/activity?limit=5', { headers: authHeaders });
+    assert(activity.status === 200 && Array.isArray(activity.data?.data), '10. GET /activity returns audit trail');
+
+    // 11. Session Revocation & Logout All
+    const logoutAll = await request('/auth/logout-all', { method: 'POST', headers: authHeaders });
+    assert(logoutAll.status === 200, '11. POST /auth/logout-all revokes sessions');
+    const verifyRevoked = await request('/auth/me', { headers: authHeaders });
+    assert(verifyRevoked.status === 401, '11b. Session invalidation confirmed: old token rejected');
 
   } catch (err) {
     console.error('Smoke test crashed:', err);
