@@ -264,14 +264,15 @@ export const HomePage: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center justify-between">
           {/* Logo & Brand Pill */}
           <Link to="/" className="flex items-center gap-2.5 group focus:outline-none focus:ring-2 focus:ring-[#FFD60A] rounded-lg">
-            <div className="w-8 h-8 rounded-lg bg-[#FFD60A] text-[#0A0A0A] flex items-center justify-center font-bold text-sm shadow-sm group-hover:scale-105 transition-transform">
-              H
-            </div>
-            <span className="font-bold text-base tracking-tight text-[#F5F5F5]">
+            <img
+              src="/k12_hunar_logo.png"
+              alt="K12 Hunar"
+              className="w-9 h-9 rounded-lg object-contain bg-black/60 border border-white/10 group-hover:border-[#FFD60A]/40 shadow-sm group-hover:scale-105 transition-all duration-200"
+            />
+            <span className="font-bold text-base tracking-tight text-[#F5F5F5] group-hover:text-white transition-colors">
               K12 Hunar
             </span>
-            {/* Phase 3: Reduced visual weight on PORTAL chip */}
-            <span className="px-1.5 py-0.5 rounded text-[9px] font-semibold uppercase tracking-wider bg-[#FFD60A]/5 text-[#FFD60A]/80 border border-[#FFD60A]/20">
+            <span className="px-1.5 py-0.5 rounded text-[9px] font-semibold uppercase tracking-wider bg-[#FFD60A]/10 text-[#FFD60A] border border-[#FFD60A]/20">
               Portal
             </span>
           </Link>
@@ -1088,9 +1089,11 @@ export const HomePage: React.FC = () => {
           {/* Col 1: Brand & One-line Description */}
           <div className="md:col-span-1">
             <div className="flex items-center gap-2.5 mb-3">
-              <div className="w-7 h-7 rounded-lg bg-[#FFD60A] text-[#0A0A0A] flex items-center justify-center font-bold text-xs shadow-sm">
-                H
-              </div>
+              <img
+                src="/k12_hunar_logo.png"
+                alt="K12 Hunar"
+                className="w-8 h-8 rounded-lg object-contain bg-black/60 border border-white/10 shadow-sm"
+              />
               <span className="font-bold text-base text-[#F5F5F5]">K12 Hunar</span>
             </div>
             <p className="text-xs text-[#A3A3A3] leading-relaxed">

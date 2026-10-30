@@ -565,9 +565,11 @@ export const AdminDashboardPage: React.FC = () => {
           {/* Logo badge & Collapse Toggle */}
           <div className="flex items-center justify-between px-2">
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-8 h-8 rounded-lg bg-[#FFD60A] text-[#0A0A0A] flex items-center justify-center font-bold text-sm shrink-0">
-                H
-              </div>
+              <img
+                src="/k12_hunar_logo.png"
+                alt="K12 Hunar"
+                className="w-8 h-8 rounded-lg object-contain bg-black/60 border border-white/10 shrink-0 shadow-sm"
+              />
               {!isSidebarCollapsed && (
                 <div className="min-w-0">
                   <p className="text-sm font-bold text-[#F5F5F5] leading-none truncate">K12 Hunar</p>

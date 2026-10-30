@@ -88,9 +88,11 @@ export const Navbar: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         {/* Brand */}
         <Link to="/" className="flex items-center gap-2.5 group">
-          <div className="w-8 h-8 rounded-lg bg-[#FFD60A] text-[#0A0A0A] flex items-center justify-center font-bold text-lg shadow-sm group-hover:scale-105 transition-transform">
-            H
-          </div>
+          <img
+            src="/k12_hunar_logo.png"
+            alt="K12 Hunar"
+            className="w-8 h-8 rounded-lg object-contain bg-black/60 border border-white/10 group-hover:border-[#FFD60A]/40 shadow-sm group-hover:scale-105 transition-all duration-200"
+          />
           <span className="font-semibold text-lg tracking-tight text-[#F5F5F5] group-hover:text-[#FFD60A] transition-colors">
             K12 Hunar <span className="text-[#FFD60A] font-light text-sm ml-1 px-1.5 py-0.5 rounded bg-[#FFD60A]/10 border border-[#FFD60A]/20">CRM</span>
           </span>
