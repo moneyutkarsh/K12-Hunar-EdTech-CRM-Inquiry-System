@@ -19,7 +19,6 @@ import {
   Send,
   KeyRound,
   RotateCw,
-  ShieldCheck,
 } from 'lucide-react';
 
 const authFormSchema = z.object({
@@ -430,180 +429,75 @@ export const AdminLoginPage: React.FC = () => {
             </div>
           </div>
 
-          {/* RIGHT COLUMN: Visual Feature Showcase Card */}
-          <div className="rounded-3xl border border-white/10 bg-[#0F0F14]/95 p-6 sm:p-8 flex flex-col justify-between relative overflow-hidden shadow-2xl min-h-[480px]">
-            {/* Ambient atmospheric purple/amber bottom glow */}
-            <div className="absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-indigo-500/10 via-[#FFD60A]/5 to-transparent pointer-events-none" />
+          {/* RIGHT COLUMN: K12 Hunar Overview & Mission (Editorial human design) */}
+          <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.05] via-white/[0.02] to-transparent p-8 sm:p-10 flex flex-col justify-between relative overflow-hidden shadow-xl min-h-[500px]">
+            {/* Subtle natural warmth glow */}
+            <div className="absolute top-0 right-0 w-80 h-80 bg-[#FFD60A]/[0.03] rounded-full blur-3xl pointer-events-none" />
 
-            {/* Graphic Cards Area */}
-            <div className="relative pt-2 pb-6">
-              {/* Floating Top Card: Resolution Rate Sparkline */}
-              <div className="rounded-2xl border border-white/15 bg-[#17171E]/90 backdrop-blur-xl p-4 sm:p-5 shadow-2xl relative z-20 max-w-[280px] sm:max-w-[320px] -rotate-1 hover:rotate-0 transition-transform duration-300">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-[11px] text-[#A1A1AA] font-medium tracking-wide">
-                    Resolution rate
-                  </span>
-                </div>
-                <div className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight mb-2">
-                  98.4%
-                </div>
-
-                {/* Smooth Curve SVG */}
-                <div className="relative h-12 w-full">
-                  <svg viewBox="0 0 240 50" className="w-full h-full overflow-visible">
-                    <path
-                      d="M 5 40 C 35 40, 55 18, 90 26 C 125 34, 150 10, 185 16 C 205 18, 220 30, 235 34"
-                      fill="none"
-                      stroke="#FFD60A"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                    />
-                    <circle cx="90" cy="26" r="4" fill="#17171E" stroke="#FFD60A" strokeWidth="2" />
-                    <circle cx="185" cy="16" r="4.5" fill="#FFD60A" />
-                    {/* Tooltip badge */}
-                    <g transform="translate(162, -10)">
-                      <rect
-                        width="46"
-                        height="18"
-                        rx="5"
-                        fill="#0A0A0E"
-                        stroke="rgba(255, 214, 10, 0.4)"
-                        strokeWidth="1"
-                      />
-                      <text
-                        x="23"
-                        y="12"
-                        textAnchor="middle"
-                        fill="#FFD60A"
-                        fontSize="9.5"
-                        fontWeight="bold"
-                        fontFamily="sans-serif"
-                      >
-                        98.4%
-                      </text>
-                    </g>
-                  </svg>
-                </div>
-              </div>
-
-              {/* Overlapping Activity Chart Card */}
-              <div className="rounded-2xl border border-white/10 bg-[#121217]/95 p-4 sm:p-5 shadow-2xl relative -mt-6 sm:-mt-8 ml-6 sm:ml-10 z-10">
-                <div className="flex">
-                  {/* Y-Axis Metrics */}
-                  <div className="flex flex-col justify-between text-[9px] text-[#71717A] font-mono pr-3 py-1 select-none">
-                    <span>30K</span>
-                    <span>20K</span>
-                    <span>10K</span>
-                    <span>0K</span>
+            <div className="relative z-10 flex flex-col justify-between h-full space-y-8">
+              {/* Top Section: Brand & Narrative */}
+              <div className="space-y-6">
+                {/* Brand Header */}
+                <div className="flex items-center gap-3.5 pb-6 border-b border-white/10">
+                  <img
+                    src="/k12_hunar_logo.png"
+                    alt="K12 Hunar"
+                    className="w-12 h-12 rounded-xl object-contain bg-black/40 border border-white/10 p-1 shadow-md"
+                  />
+                  <div>
+                    <h2 className="font-bold text-lg text-white tracking-tight">K12 Hunar</h2>
+                    <p className="text-xs text-[#9CA3AF]">Education Consulting & Technology</p>
                   </div>
+                </div>
 
-                  {/* Main Chart Area */}
-                  <div className="flex-1 relative h-28">
-                    {/* Subtle grid lines */}
-                    <div className="absolute inset-0 flex flex-col justify-between pointer-events-none opacity-20">
-                      <div className="border-b border-white/10 w-full" />
-                      <div className="border-b border-white/10 w-full" />
-                      <div className="border-b border-white/10 w-full" />
-                      <div className="border-b border-white/10 w-full" />
+                {/* Narrative Paragraph 1 */}
+                <div className="space-y-2">
+                  <p className="text-base sm:text-lg font-medium text-[#F5F5F5] leading-relaxed">
+                    K12 Hunar is a K–12 education consulting and technology venture working across the education ecosystem.
+                  </p>
+                  <p className="text-sm text-[#A1A1AA] leading-relaxed">
+                    We help institutions move from ideas and priorities to practical programs, stronger capabilities, effective technology adoption, and measurable outcomes.
+                  </p>
+                </div>
+
+                {/* Narrative Paragraph 2 */}
+                <div className="pt-4 border-t border-white/10 space-y-2">
+                  <p className="text-sm font-semibold text-[#F5F5F5] tracking-tight">
+                    K12 Hunar Clubs & Student Initiatives
+                  </p>
+                  <p className="text-sm text-[#A1A1AA] leading-relaxed">
+                    Through K12 Hunar Clubs and other student-focused initiatives, we also connect students with practical skills, projects, mentorship, leadership experiences, and verified opportunities beyond the classroom.
+                  </p>
+                </div>
+
+                {/* Editorial Pillars (natural, uncluttered inline list with amber bullets) */}
+                <div className="pt-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs text-[#D4D4D8]">
+                    <div className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#FFD60A] shrink-0" />
+                      <span>Practical Skills & Projects</span>
                     </div>
-
-                    {/* Frequency stem bars underneath */}
-                    <svg viewBox="0 0 280 80" className="w-full h-full overflow-visible">
-                      {Array.from({ length: 32 }).map((_, i) => {
-                        const x = 8 + i * 8.4;
-                        const h = 10 + Math.sin(i * 0.4) * 15 + Math.cos(i * 0.2) * 12;
-                        return (
-                          <line
-                            key={i}
-                            x1={x}
-                            y1={80}
-                            x2={x}
-                            y2={80 - h}
-                            stroke="rgba(255, 255, 255, 0.08)"
-                            strokeWidth="1.5"
-                          />
-                        );
-                      })}
-
-                      {/* Continuous trend line */}
-                      <path
-                        d="M 5 45 C 30 52, 60 48, 85 35 C 110 22, 135 48, 160 42 C 185 36, 205 18, 230 22 C 255 26, 268 40, 275 44"
-                        fill="none"
-                        stroke="#F5F5F5"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                      />
-
-                      {/* Secondary dotted line */}
-                      <path
-                        d="M 5 52 C 40 58, 70 45, 100 42 C 130 38, 160 52, 190 48 C 220 44, 250 36, 275 38"
-                        fill="none"
-                        stroke="rgba(255, 214, 10, 0.6)"
-                        strokeWidth="1.5"
-                        strokeDasharray="3 3"
-                      />
-
-                      {/* Highlight cursor line at June */}
-                      <line
-                        x1="180"
-                        y1="10"
-                        x2="180"
-                        y2="80"
-                        stroke="#FFD60A"
-                        strokeWidth="1.2"
-                        strokeOpacity="0.8"
-                      />
-                      <circle cx="180" cy="40" r="3" fill="#FFD60A" />
-
-                      {/* June tooltip badge */}
-                      <g transform="translate(162, -4)">
-                        <rect
-                          width="36"
-                          height="16"
-                          rx="4"
-                          fill="#17171E"
-                          stroke="rgba(255, 255, 255, 0.25)"
-                        />
-                        <text
-                          x="18"
-                          y="11"
-                          textAnchor="middle"
-                          fill="#F5F5F5"
-                          fontSize="8.5"
-                          fontWeight="bold"
-                          fontFamily="sans-serif"
-                        >
-                          2 June
-                        </text>
-                      </g>
-                    </svg>
+                    <div className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#FFD60A] shrink-0" />
+                      <span>Mentorship & Guidance</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#FFD60A] shrink-0" />
+                      <span>Leadership Experiences</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#FFD60A] shrink-0" />
+                      <span>Verified Opportunities</span>
+                    </div>
                   </div>
                 </div>
-
-                {/* X-Axis Month Labels */}
-                <div className="flex justify-between text-[8px] sm:text-[9px] text-[#71717A] pt-2 pl-7 font-medium select-none">
-                  <span>Jan</span>
-                  <span>Feb</span>
-                  <span>Mar</span>
-                  <span>Apr</span>
-                  <span>May</span>
-                  <span className="text-[#FFD60A] font-bold">June</span>
-                  <span>July</span>
-                  <span>Aug</span>
-                  <span>Sept</span>
-                  <span>Oct</span>
-                </div>
               </div>
-            </div>
 
-            {/* Bottom Statement Copy */}
-            <div className="text-center pt-6 relative z-10">
-              <h2 className="text-lg sm:text-xl font-bold text-[#F5F5F5] tracking-tight leading-snug">
-                A Unified Hub for Smarter Educational Decision-Making
-              </h2>
-              <p className="text-xs text-[#9CA3AF] mt-2 leading-relaxed max-w-sm mx-auto">
-                K12 Hunar empowers school committees and admissions teams with a unified command center — delivering deep insights and a 360° view of student inquiries.
-              </p>
+              {/* Quiet, authentic footer */}
+              <div className="pt-6 border-t border-white/10 flex items-center justify-between text-xs text-[#71717A]">
+                <span>Partner Institutions & Educators</span>
+                <span className="text-[#A1A1AA] font-mono text-[11px]">k12hunar.com</span>
+              </div>
             </div>
           </div>
         </div>
