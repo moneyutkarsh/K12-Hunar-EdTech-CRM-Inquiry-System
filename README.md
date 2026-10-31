@@ -104,7 +104,7 @@
 
 | Public tracker | 
 | :---: | :---: |
-| ![Tracker](docs/screenshots/readme/tracker.png)
+| ![Tracker](tracker.png)
 
 ---
 
