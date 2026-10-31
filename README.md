@@ -1,409 +1,873 @@
-# K12 Hunar CRM & Inquiry System (Advanced Edition)
+<div align="center">
+K12 Hunar CRM & Inquiry System
 
-[![CI Build & Test](https://github.com/utkarshdubey/k12-hunar-crm/actions/workflows/ci.yml/badge.svg)](https://github.com/utkarshdubey/k12-hunar-crm/actions)
-![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
-![Node: 20+](https://img.shields.io/badge/Node-20%2B-green.svg)
-![Database: Supabase PostgreSQL](https://img.shields.io/badge/Database-Supabase%20Postgres-3ECF8E.svg)
+A full-stack EdTech inquiry platform. Visitors submit and track inquiries, and the K12 Hunar team triages them from a secure admin dashboard.
 
-A full-stack, production-grade EdTech Customer Relationship Management (CRM) and Inquiry System built with **React 18/19, Vite, TypeScript, Tailwind CSS, shadcn/ui**, and an **Express.js (Node 20+)** backend with custom timing-safe JWT authentication and **Supabase PostgreSQL** accessed strictly as plain relational Postgres via `pg.Pool` on port 6543.
+CI Build & Test Show Image Show Image Show Image Show Image Show Image Show Image
 
-- 📚 **Interactive Swagger API Documentation**: `http://localhost:5000/api/docs` (or deployed at `/api/docs`)
-- 🧪 **Automated Test Suite**: 88 Vitest unit & integration tests + 7 smoke assertions (100% green)
+Live Demo · API Docs · Architecture · Getting Started · Deployment
 
----
+</div>
+Table of Contents
+Evaluator Quick Path
+Assessment Requirements Checklist
+Screenshots
+Overview
+Features
+Tech Stack
+Architecture
+Workflows
+Project Structure
+Getting Started
+Configuration
+Testing
+API Reference
+Keyboard Shortcuts
+Security
+Performance and Accessibility
+Deployment
+Troubleshooting
+Maintenance
+Architecture Decision Records
+Roadmap
+Credits and Attributions
+License
+Author
+Evaluator Quick Path
+Resource	Link or credential
+Live frontend	https://k12-hunar-crm.vercel.app (local: http://localhost:5173)
+Live API	https://k12-hunar-crm.onrender.com/api (local: http://localhost:5000/api)
+Interactive API docs (OpenAPI 3)	https://k12-hunar-crm.onrender.com/api/docs (local: /api/docs)
+Evaluator admin account	Email: admin@k12hunar.com · Password: Admin@12345
 
----
+[!NOTE] Cold start: the backend runs on a free hosting tier that sleeps after inactivity. The first request can take up to about a minute. The frontend shows a "waking up the server" banner and continues automatically once the API responds.
 
-## ? Evaluator Quick Path
+[!WARNING] The evaluator account exists only for review. For any real deployment, change the password in Admin → Settings → Security and use your own ADMIN_EMAIL and ADMIN_PASSWORD.
 
-| Key Resource | URL / Credential |
-| :--- | :--- |
-| **Live Frontend URL** | `https://k12-hunar-crm.vercel.app` *(or local: `http://localhost:5173`)* |
-| **Live API Backend URL** | `https://k12-hunar-crm.onrender.com/api` *(or local: `http://localhost:5000/api`)* |
-| **Interactive OpenAPI Docs** | `https://k12-hunar-crm.onrender.com/api/docs` *(or local: `/api/docs`)* |
-| **Documented Evaluator Account** | **Email:** `admin@k12hunar.com` &bull; **Password:** `Admin@12345` |
+Six-step walkthrough (about 90 seconds)
+Submit an inquiry at /inquiry. Choose a user type and a category, fill in your details, and submit.
+Copy the reference code shown on the success screen (format KH-XXXXXXXX).
+Track it at /track using the reference code and the email you entered. You get the current status and a sanitized timeline, with no personal data exposed.
+Sign in at /admin/login with the evaluator account above.
+Manage the inquiry in /admin: find it with search (press /), open the drawer, change the status to In Progress, set the priority, assign it, and add an internal note.
+Verify the audit trail at /admin/activity. Every change appears with the actor, the action and a timestamp.
+Assessment Requirements Checklist
+Requirement	Implementation
+Public inquiry form with User Type, Category, Name, Email, Phone, Message	/inquiry, validated with Zod on the client and the server
+Saves directly to Supabase PostgreSQL	Backend writes through pg.Pool using parameterized SQL
+Supabase used only as a database (no Supabase Auth)	Standard connection string, no supabase-js, no Supabase Auth
+Custom JWT authentication written from scratch	bcryptjs hashing, jsonwebtoken signing, custom auth middleware
+Protected admin dashboard	/admin requires a valid token; invalid or revoked tokens return 401
+Table with Name, Phone, Email, User Type, Category, Date, Status	Admin dashboard table view
+Filters by Category and User Type, search by Name or Phone	Server-side SQL filtering, debounced search, state kept in the URL
+schema.sql	backend/schema.sql (plus idempotent npm run db:migrate)
+.env.example	backend/.env.example and frontend/.env.example
+README with setup and JWT testing	This file: Getting Started and Testing
+Live demo link	See Evaluator Quick Path
+Screenshots
 
-> [!NOTE]
-> **Free-Tier Cold-Start Notice:** If accessing the live Render deployment after inactivity, the free-tier service spins down. The initial API health ping may take ~45?50 seconds to warm up the container. The frontend features an automatic server wakeup detection banner that resolves as soon as the API responds.
+Place these images in docs/screenshots/readme/ (compressed, under about 200 KB each). Remove this section if you prefer not to show images.
 
-### 6-Step Evaluator Walkthrough (Takes < 90 Seconds)
-1. **Submit an Inquiry (`/inquiry`):** Open the public inquiry form. Select `Parent` &rarr; `Scholarship`, enter your details, and submit.
-2. **Copy Reference Code:** Upon submission, an 8-character reference code (e.g. `KH-7F2K9M4X`) is generated and presented on screen with a one-click copy button.
-3. **Track Your Submission (`/track`):** Navigate to the Public Tracker. Enter the reference code and your registered email address to view live status and the estimated resolution timeline.
-4. **Sign In as Administrator (`/admin/login`):** Use the pre-filled quick demo credentials (`admin@k12hunar.com` / `Admin@12345`) or enter your email for OTP verification.
-5. **Manage & Update Status:** In the Admin Dashboard (`/admin`), locate the inquiry via the instant search filter (`/`), open the inquiry drawer, change the status to `In Progress`, set priority to `High`, and log an internal note.
-6. **Verify Audit Trail (`/admin/activity`):** Open the Activity feed to confirm that the status change and note are immediately reflected with actor attribution, timestamp, and metadata.
+Home	Inquiry form
+Home page	Inquiry form
+Admin dashboard	Pipeline board
+Admin dashboard	Pipeline board
+Public tracker	Activity feed
+Tracker	Activity feed
+Overview
 
----
+K12 Hunar receives questions from parents, students and schools about scholarships, admissions, concerts and general topics. This project gives those visitors one clean place to ask, and gives the team one place to manage everything.
 
-## ?? What's New in v2
+For visitors
 
-* **Home (`/`):** Redesigned editorial poster card carousel with technical grid overlays, live countdowns, Asia/Kolkata date tiles, interactive Liquid GooeyNav navigation, live aggregates counter, and FAQ accordion.
-* **Public Inquiry (`/inquiry`):** Split-pane design with real-time Zod validation, invisible honeypot bot trap, and instant reference code generation.
-* **Public Tracker (`/track`):** Privacy-safe public status lookup requiring both reference code and registered email, returning normalized stages without exposing PII.
-* **Admin Activity Audit Feed (`/admin/activity`):** Cursor-paginated immutable audit feed of all administrative actions, status transitions, priority changes, and counselor notes.
-* **Admin Settings & Security (`/admin/settings`):** Profile preferences, timing-safe password update with entropy complexity rules, instant session revocation via `token_version` invalidation (`/auth/logout-all`), and GPU background rendering toggles.
-* **Unique Reference Codes:** Algorithmic `KH-XXXXXXXX` identifier generated on submission for zero-friction inquiry tracking.
-* **Priority Routing & Assignment:** Native `High`, `Medium`, and `Low` priority classification with counselor assignment and related contact submission history count.
-* **Related Contacts Aggregation:** Real-time lookup grouping prior submissions from the same email with historical submission count badges.
-* **Automated Database Migrations:** Idempotent migration runner (`npm run db:migrate`) managing schema evolution across Supabase instances.
-* **New v2 OpenAPI Endpoints:**
-  * `POST /api/track` - Public inquiry status lookup
-  * `GET /api/public/stats` - Public resolved/active metrics
-  * `GET /api/activity` - Cursor-paginated admin audit log
-  * `GET /api/admins/options` - Active counselor directory for assignment
-  * `PATCH /api/inquiries/:id/priority` - Update inquiry priority
-  * `PATCH /api/inquiries/:id/assign` - Assign inquiry to administrator
-  * `PATCH /api/inquiries/bulk-status` - Batch status update
-  * `PATCH /api/auth/password` - Timing-safe password modification
-  * `POST /api/auth/logout-all` - Global session revocation
-  * `POST /api/auth/otp/send` - Branded 6-digit email OTP dispatch
-  * `POST /api/auth/otp/verify` - One-time password verification & session provisioning
+Ask a question in under two minutes with no account.
+Receive a reference code and check progress later on a privacy-safe tracker page.
 
-## 📑 Table of Contents
-1. [Overview & Features](#overview--features)
-2. [Architecture Diagram](#architecture-diagram)
-3. [Tech Stack](#tech-stack)
-4. [Prerequisites](#prerequisites)
-5. [Getting Your Database Credentials (Supabase)](#getting-your-database-credentials-supabase)
-6. [Generating Your JWT Secret](#generating-your-jwt-secret)
-7. [Local Environment Setup](#local-environment-setup)
-8. [Database Setup & Seeding](#database-setup--seeding)
-9. [How to Test the Custom JWT Auth (Ready-to-Paste cURL Commands)](#how-to-test-the-custom-jwt-auth)
-10. [API Reference & OpenAPI 3](#api-reference)
-11. [Deployment Guide (Render & Vercel)](#deployment-guide-render--vercel)
-12. [Security & Production Hardening](#security--production-hardening)
-13. [Architecture Decisions (ADR)](#architecture-decisions-adr)
+For the admin team
 
----
+See every inquiry in a table or a Kanban pipeline.
+Narrow the list with server-side filters and search.
+Prioritize, assign, annotate and resolve inquiries, with a full audit trail.
+Spot repeat contacts and inquiries that have waited too long.
 
-## Overview & Features
+The backend is a layered Express API with custom JWT authentication. The database is Supabase PostgreSQL used as plain Postgres through the pg driver. The frontend is a React single-page app with a black and gold design system.
 
-### 1. Public Inquiry Portal (`/`)
-- **Split-Card Layout**: Modern dark theme with yellow accents (#FFD60A) and glassmorphism.
-- **Aero Shards Background**: Interactive WebGL shader animated shards with lazy-loading and accessible fallbacks.
-- **Role & Category Selection**: Inquiries from Parents, Students, and Schools across Scholarship, Concert, Admission, and General Query.
-- **Bot Protection**: Invisible honeypot field rejecting automated bot spam.
-- **Validation**: Full client-side & server-side validation with Zod.
-- **Animated Success State**: Clean confirmation screen with one-click re-submission.
+Features
+Public experience
+Area	Highlights
+Home (/)	Landing page with an animated hero, services, "who it's for", how it works, live aggregate stats (hidden if the API is unavailable), an FAQ with structured data, and a Featured Programs carousel. Program cards open the official k12hunar.com event pages in a new tab and can also start an inquiry with the program prefilled.
+Inquiry form (/inquiry)	User type and category pickers, live validation, honeypot spam trap, duplicate-submission protection, optional prefill from ?category=, ?userType= and ?topic=, and a success screen with a copyable reference code.
+Tracker (/track)	Look up an inquiry with its reference code and the submitter's email. Returns only the status and a sanitized timeline. No message, phone, notes or admin identities are ever returned. Rate limited.
+Admin dashboard
+Area	Highlights
+Overview	Time-aware greeting, stat cards (Total, New, In Progress, Resolved) with count-up numbers, deltas and sparklines, click-to-filter, a "needs attention" strip, and KPI tiles (today's inquiries, average first response, resolution rate, busiest category).
+Analytics	Daily trajectory chart with 7, 30 and 90 day ranges and an optional previous-period comparison, plus a category donut that filters when clicked.
+Table view	Sticky header, sortable columns, inline status changes, server-side pagination, URL-synced filters, and CSV export of the filtered result.
+Pipeline board	Three-column Kanban (New, In Progress, Resolved) with drag and drop and a keyboard-accessible "Move" fallback.
+Filters and search	Category, user type and status filters, plus a debounced search across name and normalized phone number. All filtering runs in SQL on the server.
+Inquiry drawer	Full details, status, priority, assignee, internal notes, activity timeline, related inquiries from the same contact, and previous/next navigation.
+Priority and assignment	Priority levels (Low, Normal, High, Urgent) and assignment to any active admin. A repeat-contact badge flags people who have written more than once.
+Activity feed (/admin/activity)	Cursor-paginated audit log of status changes, priority changes, assignments and notes, with filter chips and click-through to the inquiry.
+Settings (/admin/settings)	Profile, password change with a live complexity checklist, sign out of all devices (instant session revocation), and UI preferences including background effects.
+Productivity	Command palette (Ctrl/Cmd + K), keyboard shortcuts, quick views with live counts, and polling that notifies you when new inquiries arrive.
+Design and experience
+Black and gold design system: obsidian 
+#050505 base, brand yellow 
+#FFD60A, glass surfaces, and semantic colors for statuses and categories.
+Three route-scoped WebGL backgrounds: Ghost Fibers (Home), Aero Shards (public form, tracker, login), Grid Scan (admin area). Each has a lightweight CSS fallback.
+Typography: Space Grotesk for headings and metrics, Inter for interface text, with tabular numerals for data.
+Respect for user settings: reduced motion, small screens, low-power devices and data-saver mode automatically switch to the CSS fallback.
+Tech Stack
+Layer	Technology	Why it is used
+Frontend framework	React 19, TypeScript (strict)	Typed components and predictable rendering
+Build tool	Vite	Fast development server and optimized production builds
+Styling	Tailwind CSS v4, shadcn/ui (Radix primitives)	Design tokens, accessible headless components
+Routing	React Router v7	Client routing and URL-based filter state
+Forms and validation	React Hook Form, Zod	Low re-render forms with shared schema style on client and server
+HTTP	Axios	Interceptors for the Bearer token and 401 handling
+State	React Context and URL query parameters	Small, dependency-light state model
+Charts and drag and drop	Recharts, @dnd-kit	Analytics charts and the Kanban board
+Motion and feedback	Framer Motion, Sonner, Lucide	Animation, toasts and a consistent icon set
+Visual effects	WebGL2 shaders, adapted React Bits components	Branded backgrounds with fallbacks
+Backend	Node.js 20+, Express (ES modules)	Layered REST API
+Database driver	pg (node-postgres)	Parameterized queries, connection pooling
+Authentication	bcryptjs, jsonwebtoken	Custom JWT authentication, no third-party auth
+Validation and security	Zod, helmet, cors, express-rate-limit	Input validation, headers, CORS allow-list, throttling
+Logging and docs	morgan, Swagger UI (OpenAPI 3)	Request logs and interactive API documentation
+Database	Supabase PostgreSQL (session pooler)	Managed Postgres used purely as a database
+Testing	Vitest (unit and integration), smoke script	Fast tests for logic, API and deployment checks
+CI and hosting	GitHub Actions, Vercel (frontend), Render (backend)	Automated checks and deployment
+Architecture
+System overview
+Supabase
+Render (Node 20+)
+Vercel
+Clients
+HTTPS / JSONBearer JWT on admin routes
+pg.Pool, SSLparameterized SQL
+Visitor(Parent / Student / School)
+Admin(K12 Hunar team)
+React + Vite SPA
+Express API
+PostgreSQLsession pooler
+Backend layers
+Middleware layer
+helmet + CORS allow-list
+Rate limiters
+Zod validators
+JWT auth middleware
+Routes
+Controllers
+Services
+Repositories(parameterized SQL)
+PostgreSQL
 
-### 2. Custom Admin Auth & Security (`/admin/login`)
-- **Zero Third-Party Auth Lock-in**: Custom JWT authentication written from scratch in Node.js using `bcryptjs` and `jsonwebtoken`.
-- **Timing Attack Mitigation**: Employs constant-time dummy password comparison when user accounts are not found.
-- **Strict Rate Limiting**: Maximum 5 login attempts per 15 minutes per IP.
-- **Session Auto-Expiry & Refresh**: Tokens valid for 8 hours; automatic interceptors handle 401s and redirect to login with toasts.
+Routes stay thin, controllers translate HTTP to service calls, services hold business rules, and repositories are the only place SQL lives.
 
-### 3. Admin Management Dashboard (`/admin`)
-- **Dynamic Time Greeting**: Contextual morning/afternoon/evening greeting with current formatted date.
-- **Real-Time Stat Counters**: Animated count-up metrics for Total, New, In Progress, and Resolved.
-- **Dual View Modes**:
-  - **Data Table View**: Dense tabular view with sticky header, sortable columns, and inline status changer.
-  - **Pipeline Kanban Board**: Interactive 3-column workflow board (New, In Progress, Resolved).
-- **Search & Filters**: 400ms debounced search (matches name or normalized phone) and multi-select filtering with state synced in the URL query string.
-- **CSV Export**: Server-side filtered export with CSV Formula Injection (`=`, `+`, `-`, `@`) mitigation.
-- **Side Details Drawer**: Slide-over panel displaying comprehensive inquiry details and direct actions.
+Frontend routes and backgrounds
+Route	Page	Access	Background
+/	Home	Public	Ghost Fibers
+/inquiry	Inquiry form	Public	Aero Shards
+/track	Inquiry tracker	Public	Aero Shards
+/admin/login	Admin login	Public	Aero Shards
+/admin	Dashboard (table and board)	Admin	Grid Scan
+/admin/activity	Activity feed	Admin	Grid Scan
+/admin/settings	Settings and security	Admin	Grid Scan
 
----
+Only one WebGL background is mounted at a time, and each loads in its own lazy chunk.
 
-## Architecture Diagram
+Data model
+assigned to
+writes
+performs
+has
+records
+ADMINS
+uuid
+id
+PK
+text
+email
+UK
+text
+name
+text
+password_hash
+text
+role
+int
+token_version
+timestamptz
+created_at
+INQUIRIES
+uuid
+id
+PK
+text
+reference_code
+UK
+text
+user_type
+text
+category
+text
+name
+text
+email
+text
+phone
+text
+message
+text
+status
+text
+priority
+uuid
+assigned_to
+FK
+timestamptz
+created_at
+timestamptz
+updated_at
+INQUIRY_NOTES
+uuid
+id
+PK
+uuid
+inquiry_id
+FK
+uuid
+admin_id
+FK
+text
+note
+timestamptz
+created_at
+ACTIVITY_LOG
+uuid
+id
+PK
+uuid
+inquiry_id
+FK
+uuid
+admin_id
+FK
+text
+action
+text
+from_value
+text
+to_value
+timestamptz
+created_at
 
-```mermaid
-graph TD
-    User([Public Visitor / Parent / Student / School]) -->|1. Submit Inquiry| Frontend[React + Vite Frontend<br/>Vercel]
-    Admin([School Administrator]) -->|2. Admin Login & Dashboard| Frontend
+Allowed values are enforced with database CHECK constraints and mirrored in Zod schemas:
 
-    Frontend -->|3. REST API / HTTPS| Backend[Node.js + Express Backend<br/>Render]
-    
-    subgraph Backend Services
-        AuthMW[Custom Auth Middleware<br/>JWT Verification]
-        RateLimiter[Express Rate Limiter]
-        Validator[Zod Schema Validators]
-        SQLQuery[pg Client - Parameterized SQL]
-    end
+Field	Values
+user_type	Parent, Student, School
+category	Scholarship, Concert, Admission, General Query
+status	New, In Progress, Resolved
+priority	Low, Normal, High, Urgent
 
-    Backend --> RateLimiter --> Validator --> AuthMW --> SQLQuery
-    SQLQuery -->|Session Pooler SSL:5432| DB[(Supabase PostgreSQL<br/>admins & inquiries tables)]
-```
+Indexes support the common queries: date ordering, category, user type, status, trigram name search, and phone lookup. See docs/ER-DIAGRAM.md for the full definition.
 
----
+Workflows
+Inquiry lifecycle
+Visitor submits an inquiry
+Admin picks it up
+Admin resolves it
+Quick resolution
+Reopened
+In Progress
+New
+Resolved
 
-## Tech Stack
+Admins can move an inquiry between statuses from the table, the board or the drawer. Every change is written to the audit log with the actor and a timestamp.
 
-| Layer | Technologies |
-|---|---|
-| **Frontend** | React 19, TypeScript, Vite, Tailwind CSS v4, shadcn/ui, React Router v7, react-hook-form, Zod, Axios, Sonner, Lucide React, Aero Shards WebGL |
-| **Backend** | Node.js (ES Modules), Express.js, `pg` (node-postgres), `bcryptjs`, `jsonwebtoken`, `zod`, `helmet`, `cors`, `express-rate-limit`, `morgan`, `dotenv` |
-| **Database** | Supabase PostgreSQL (Standard connection string using `pg`, no Supabase Auth/client) |
-| **Hosting** | Vercel (Frontend), Render (Backend) |
+Visitor flow: submit and track
+PostgreSQL
+Express API
+React SPA
+PostgreSQL
+Express API
+React SPA
+Visitor
+Fill in the inquiry form
+Zod validation (client)
+POST /api/inquiries
+Rate limit, honeypot check, Zod validation
+INSERT inquiry (parameterized)
+id and reference_code
+201 with referenceCode
+Success screen with KH-XXXXXXXX
+Open /track, enter code and email
+POST /api/track
+Match reference_code AND lower(email)
+Matching row or nothing
+Sanitized status and timeline (generic 404 if no match)
+Visitor
+Admin authentication and session flow
+PostgreSQL
+Express API
+React SPA
+PostgreSQL
+Express API
+React SPA
+Password change or "sign out everywhere" increments token_version.
+Older tokens then receive 401 and the client returns to login.
+Admin
+Email and password
+POST /api/auth/login
+SELECT admin by lower(email)
+bcrypt.compare (dummy hash if the user does not exist)
+200 with JWT (8h, includes token version)
+GET /api/inquiries with Bearer token
+Verify signature and expiry
+Compare token version with admins.token_version
+200 data
+Admin
+Admin triage routine
+Open dashboard
+Review stats andneeds-attention strip
+Filter or search
+Open inquiry drawer
+Set priority and assignee
+Add notes, move toIn Progress
+Resolve
+Visible inActivity feed
+Project Structure
 
----
+Abridged view of the repository:
 
-## Prerequisites
+text
+k12-hunar-crm/
+├── backend/
+│   ├── src/
+│   │   ├── config/          # env validation, pg pool, logger
+│   │   ├── middleware/      # auth, validation, rate limiters, errors
+│   │   ├── routes/          # route definitions
+│   │   ├── controllers/     # HTTP layer
+│   │   ├── services/        # business rules
+│   │   ├── repositories/    # parameterized SQL
+│   │   ├── validators/      # Zod schemas
+│   │   ├── utils/           # helpers (phone, CSV, pagination)
+│   │   ├── scripts/         # db setup, migrate, seeds, smoke test
+│   │   ├── docs/            # OpenAPI document
+│   │   ├── app.js           # builds the Express app
+│   │   └── server.js        # starts the server
+│   ├── tests/               # unit and integration tests
+│   ├── schema.sql
+│   └── .env.example
+├── frontend/
+│   ├── src/
+│   │   ├── app/             # router, providers, route guards
+│   │   ├── features/        # home, inquiry form, tracker, auth, dashboard, activity, settings
+│   │   ├── components/      # ui primitives, layout, backgrounds
+│   │   ├── lib/             # API client, formatting helpers
+│   │   ├── hooks/           # shared hooks
+│   │   └── styles/          # design tokens
+│   ├── vercel.json          # SPA rewrite
+│   └── .env.example
+├── docs/                    # ADRs, architecture, ER diagram, deployment checklist
+├── .github/workflows/       # CI
+└── README.md
+Getting Started
+Prerequisites
+Node.js 20 or newer and npm 9 or newer
+A free Supabase account (used only as PostgreSQL)
+Git
+1. Clone and install
+bash
+git clone https://github.com/utkarshdubey/k12-hunar-crm.git
+cd k12-hunar-crm
 
-- **Node.js** (v18.x, v20.x, or newer)
-- **npm** (v9.x or newer)
-- A free **Supabase** account (for PostgreSQL)
+cd backend && npm install
+cd ../frontend && npm install
+2. Get your database connection string (Supabase)
 
----
+This project uses Supabase only as a PostgreSQL database through pg. You do not need Supabase Auth or API keys.
 
-## Getting Your Database Credentials (Supabase)
+Create a project at supabase.com and set a database password.
+Wait for provisioning (about a minute or two).
+Open Project Settings → Database → Connection string and choose the Session pooler tab (port 5432).
+Copy the URI and replace YOUR_PASSWORD with your database password.
+text
+postgresql://postgres.<project-ref>:YOUR_PASSWORD@aws-0-<region>.pooler.supabase.com:5432/postgres
 
-This project connects to Supabase as a **standard PostgreSQL database** using the `pg` library. You do **not** need Supabase Auth or API keys. You only need the standard PostgreSQL connection string.
+[!TIP] Use the pooler string, especially on Render. The direct database host is IPv6-only and often fails from hosting platforms. If your password contains special characters, URL-encode them (for example @ becomes %40).
 
-### Step-by-Step:
-1. Log in to [Supabase](https://supabase.com/) and click **New Project**.
-2. Name your project (e.g., `k12-hunar-crm`), enter a secure database password, and choose your preferred region. Click **Create new project**.
-3. Once the project finishes provisioning (about 1-2 minutes):
-   - In the left sidebar, click the **Settings** gear icon (⚙️) -> **Database**.
-   - Scroll down to the **Connection string** section.
-   - Select the **Session Pooler** or **Transaction Pooler** tab (using Port `5432`).
-   - Copy the URI string. It looks like:
-     ```
-     postgresql://postgres.yourprojectref:YOUR_PASSWORD@aws-0-us-east-1.pooler.supabase.com:5432/postgres
-     ```
-   *(Note: On cloud platforms like Render, Supabase's direct connection is IPv6-only; the Pooler connection supports IPv4 and connects seamlessly).*
-4. Replace `YOUR_PASSWORD` with the database password you created in Step 2.
-
----
-
-## Generating Your JWT Secret
-
-Your custom authentication requires a random 32+ character string to securely sign tokens:
-
-Run this one-line command in your terminal:
-```bash
+3. Generate a JWT secret
+bash
 node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
-```
-Copy the generated string. You will paste it as `JWT_SECRET` in your backend `.env`.
+4. Configure environment variables
 
----
+Create backend/.env from backend/.env.example:
 
-## Local Environment Setup
-
-### 1. Clone & Configure Backend
-Navigate to `/backend`:
-```bash
-cd backend
-npm install
-```
-Create `backend/.env` (copy from `.env.example`):
-```ini
+ini
 PORT=5000
 NODE_ENV=development
-DATABASE_URL=postgresql://postgres.yourprojectref:yourpassword@aws-0-your-region.pooler.supabase.com:5432/postgres
-JWT_SECRET=paste_your_48_byte_random_hex_string_here
+DATABASE_URL=postgresql://postgres.<project-ref>:YOUR_PASSWORD@aws-0-<region>.pooler.supabase.com:5432/postgres
+JWT_SECRET=paste_your_generated_secret_here
 JWT_EXPIRES_IN=8h
 CLIENT_URL=http://localhost:5173
 ADMIN_EMAIL=admin@k12hunar.com
 ADMIN_PASSWORD=Admin@12345
-```
 
-### 2. Configure Frontend
-Navigate to `/frontend`:
-```bash
-cd ../frontend
-npm install
-```
-Create `frontend/.env` (copy from `.env.example`):
-```ini
+Create frontend/.env from frontend/.env.example:
+
+ini
 VITE_API_URL=http://localhost:5000/api
-```
+5. Prepare the database
 
----
+Run these from backend/, in this order. All scripts are safe to run more than once.
 
-## Database Setup & Seeding
+bash
+npm run db:setup        # create tables, constraints and indexes from schema.sql
+npm run db:migrate      # apply idempotent v2 additions (reference codes, priority, assignment, token versions)
+npm run seed:admin      # create or update the admin from ADMIN_EMAIL / ADMIN_PASSWORD
+npm run seed:inquiries  # optional: add realistic sample inquiries
 
-Run these scripts from the `/backend` directory:
+Alternatively, paste backend/schema.sql into the Supabase SQL Editor, then run db:migrate and seed:admin.
 
-### 1. Execute SQL Schema
-Creates the `admins` and `inquiries` tables and all performance and trigram indexes:
-```bash
-npm run db:setup
-```
-*(Alternatively, copy and run `backend/schema.sql` directly inside the Supabase Web SQL Editor).*
+To create an additional admin for testing assignment:
 
-### 2. Seed Default Admin Account
-Creates or updates the admin account using credentials from `ADMIN_EMAIL` and `ADMIN_PASSWORD`:
-```bash
-npm run seed:admin
-```
-- **Default Email**: `admin@k12hunar.com`
-- **Default Password**: `Admin@12345`
+bash
+npm run seed:admin -- --email priya@example.com --password "Str0ng!Pass" --name "Priya Sharma"
+6. Run the app
+bash
+# Terminal 1
+cd backend && npm run dev
 
-### 3. Seed Realistic Sample Inquiries
-Populates 25 realistic inquiries across all user types and categories:
-```bash
-npm run seed:inquiries
-```
+# Terminal 2
+cd frontend && npm run dev
 
----
+Open http://localhost:5173. Swagger docs are at http://localhost:5000/api/docs.
 
-## Starting the Application
+7. Verify your setup
 
-In terminal 1 (Backend):
-```bash
-cd backend
-npm run dev
-```
+Run these quick checks to confirm everything is connected:
 
-In terminal 2 (Frontend):
-```bash
-cd frontend
-npm run dev
-```
+bash
+curl http://localhost:5000/api/health
 
-Open your browser at `http://localhost:5173`.
+The response should report a healthy status. Then check the app in the browser:
 
----
+Check	Where	Expected
+Home page loads	http://localhost:5173	Hero, services and programs carousel render with no console errors
+Public form saves data	/inquiry	Success screen with a KH-XXXXXXXX reference code
+Admin login works	/admin/login	Redirects to /admin and shows inquiries (use the ADMIN_EMAIL and ADMIN_PASSWORD you seeded)
+API docs load	http://localhost:5000/api/docs	Swagger UI lists the endpoints
 
-## How to Test the Custom JWT Auth
+If a check fails, see Troubleshooting.
 
-Here are ready-to-paste `curl` commands to test the backend authentication and security:
+[!TIP] Windows users: run the shell snippets in this README in Git Bash or WSL. In PowerShell, use curl.exe instead of curl (PowerShell's curl is an alias for a different command) and set environment variables with $env:NAME="value".
 
-### 1. Admin Login (Get Token)
-```bash
+Command reference
+Location	Command	Purpose
+backend	npm run dev	Start the API in development mode
+backend	npm start	Start the API for production
+backend	npm test	Run backend unit and integration tests
+backend	npm run db:setup	Apply schema.sql
+backend	npm run db:migrate	Apply idempotent schema additions
+backend	npm run seed:admin	Create or update an admin (--email, --password, --name)
+backend	npm run seed:inquiries	Insert sample inquiries
+frontend	npm run dev	Start the Vite development server
+frontend	npm run build	Typecheck and build for production
+frontend	npm test	Run frontend tests
+frontend	npm run check:links	Check the official program links (warn only)
+Configuration
+Backend (backend/.env)
+Variable	Required	Description
+PORT	No	API port (default 5000)
+NODE_ENV	No	development or production
+DATABASE_URL	Yes	Supabase session pooler connection string
+JWT_SECRET	Yes	Random secret of at least 32 characters
+JWT_EXPIRES_IN	No	Token lifetime (default 8h)
+CLIENT_URL	Yes	Allowed frontend origin for CORS, with no trailing slash. Separate several origins with commas.
+ADMIN_EMAIL	For seeding	Email used by npm run seed:admin
+ADMIN_PASSWORD	For seeding	Password used by npm run seed:admin
+
+Any additional optional variables, such as email delivery settings, are documented in backend/.env.example.
+
+Frontend (frontend/.env)
+Variable	Required	Description
+VITE_API_URL	Yes	API base URL including /api. Vite reads it at build time, so redeploy after changing it.
+Testing
+Automated tests
+bash
+cd backend && npm test        # unit and integration tests
+cd frontend && npm test       # frontend unit tests
+cd frontend && npm run build  # typecheck and production build
+Deployment smoke test
+
+Runs a short end-to-end check against any running API (local or deployed) and prints PASS or FAIL per step:
+
+bash
+API_URL=https://k12-hunar-crm.onrender.com/api \
+ADMIN_EMAIL=admin@k12hunar.com \
+ADMIN_PASSWORD=Admin@12345 \
+node backend/src/scripts/smoke.mjs
+
+On Windows PowerShell:
+
+powershell
+$env:API_URL="https://k12-hunar-crm.onrender.com/api"
+$env:ADMIN_EMAIL="admin@k12hunar.com"
+$env:ADMIN_PASSWORD="Admin@12345"
+node backend/src/scripts/smoke.mjs
+Testing the custom JWT authentication
+<details> <summary><strong>Ready-to-paste cURL commands</strong> (click to expand)</summary>
+
+Replace http://localhost:5000 with the live API origin if testing the deployment.
+
+1. Log in and get a token (200)
+
+bash
 curl -X POST http://localhost:5000/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"admin@k12hunar.com","password":"Admin@12345"}'
-```
-*Expected response (200 OK):*
-```json
+json
 {
   "message": "Login successful",
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
   "admin": { "id": "...", "email": "admin@k12hunar.com" }
 }
-```
 
-### 2. Access Inquiries with NO Token (Fails with 401)
-```bash
+2. Protected route with no token (401)
+
+bash
 curl -i http://localhost:5000/api/inquiries
-```
-*Expected response (401 Unauthorized):*
-```json
+json
 { "error": { "message": "Authentication required. Missing Bearer token." } }
-```
 
-### 3. Access Inquiries with BAD Token (Fails with 401)
-```bash
+3. Protected route with a forged token (401)
+
+bash
 curl -i http://localhost:5000/api/inquiries \
   -H "Authorization: Bearer invalid_or_forged_token_here"
-```
-*Expected response (401 Unauthorized):*
-```json
+json
 { "error": { "message": "Invalid authentication token." } }
-```
 
-### 4. Access Inquiries with VALID Token (Succeeds with 200)
-*(Replace `<TOKEN>` with the token from Step 1)*:
-```bash
+4. Protected route with a valid token (200)
+
+bash
 curl http://localhost:5000/api/inquiries \
   -H "Authorization: Bearer <TOKEN>"
-```
 
-### 5. Update Status (PATCH)
-```bash
+5. Filter, search and paginate on the server
+
+bash
+curl "http://localhost:5000/api/inquiries?category=Scholarship&userType=Parent&search=98&page=1&limit=10" \
+  -H "Authorization: Bearer <TOKEN>"
+
+6. Update a status
+
+bash
 curl -X PATCH http://localhost:5000/api/inquiries/<INQUIRY_UUID>/status \
   -H "Authorization: Bearer <TOKEN>" \
   -H "Content-Type: application/json" \
   -d '{"status":"In Progress"}'
-```
 
----
+7. Public tracker (reference code and email must both match)
 
-## API Reference
+bash
+curl -X POST http://localhost:5000/api/track \
+  -H "Content-Type: application/json" \
+  -d '{"reference":"KH-XXXXXXXX","email":"visitor@example.com"}'
 
-| Method | Endpoint | Auth | Description |
-|---|---|---|---|
-| `GET` | `/api/health` | Public | Server health check (Render warm-up) |
-| `GET` | `/api/docs` | Public | Interactive OpenAPI 3 / Swagger documentation UI |
-| `POST` | `/api/inquiries` | Public (Rate Limited) | Submit an inquiry (Zod validated, honeypot protected) |
-| `POST` | `/api/auth/login` | Public (5 req/15m) | Admin login (constant-time bcrypt check, returns JWT) |
-| `GET` | `/api/auth/me` | Protected | Returns authenticated admin profile |
-| `GET` | `/api/inquiries` | Protected | Paginated inquiries with server filters, search, and sorting |
-| `GET` | `/api/inquiries/stats` | Protected | Inquiries count by status (Total, New, In Progress, Resolved) |
-| `GET` | `/api/inquiries/analytics` | Protected | 30-day zero-filled volume timeseries and category distribution |
-| `GET` | `/api/inquiries/export`| Protected | Export filtered inquiries as sanitized CSV |
-| `GET` | `/api/inquiries/:id` | Protected | Complete inquiry details with notes and audit timeline |
-| `PATCH`| `/api/inquiries/:id/status` | Protected | Update status (`New`, `In Progress`, `Resolved`) with audit log |
-| `GET` | `/api/inquiries/:id/notes` | Protected | Retrieve reverse-chronological notes for an inquiry |
-| `POST` | `/api/inquiries/:id/notes` | Protected | Add an internal admin note with audit trail log |
+8. Session revocation: a token stops working after "sign out everywhere"
 
----
+bash
+# Revoke all sessions for this admin
+curl -X POST http://localhost:5000/api/auth/logout-all \
+  -H "Authorization: Bearer <TOKEN>"
 
-## Architecture Decisions (ADR)
+# The same token is now rejected (401)
+curl -i http://localhost:5000/api/auth/me \
+  -H "Authorization: Bearer <TOKEN>"
+</details>
+Verifying the security controls
+<details> <summary><strong>Hands-on checks for spam protection, duplicates, CSV safety and rate limits</strong> (click to expand)</summary>
 
-Detailed engineering decision records are maintained in `/docs`:
-- [ADR-001: Supabase Session Pooler (Port 6543)](docs/ADR/ADR-001-supabase-pooler.md)
-- [ADR-002: JWT Bearer Tokens vs Cookies](docs/ADR/ADR-002-jwt-vs-cookies.md)
-- [ADR-003: Timing-Safe Auth & Brute-Force Lockout](docs/ADR/ADR-003-timing-safe-auth.md)
-- [ADR-004: Server-Side Filtering, Search & Window Pagination](docs/ADR/ADR-004-server-side-filtering.md)
-- [ADR-005: AeroShards WebGL Background & Fallback](docs/ADR/ADR-005-webgl-background-fallback.md)
-- [Database ER Diagram](docs/ER-DIAGRAM.md)
-- [System Architecture & Sequence Flows](docs/ARCHITECTURE.md)
-- [Production Deployment Checklist](docs/DEPLOY-CHECKLIST.md)
+Set these variables once (jq reads the token; without it, copy the token from the login response by hand):
 
----
+bash
+API=http://localhost:5000/api
+TOKEN=$(curl -s -X POST $API/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@k12hunar.com","password":"Admin@12345"}' | jq -r .token)
 
-## Deployment Guide (Render & Vercel)
+Honeypot. A bot that fills the hidden website field gets a normal-looking 201, but nothing is stored. The total should not change:
 
-### Backend on Render
-1. Push your repository to GitHub.
-2. In Render Dashboard, click **New +** -> **Web Service**.
-3. Select your repository.
-4. Set settings:
-   - **Root Directory**: `backend`
-   - **Environment**: `Node`
-   - **Build Command**: `npm install`
-   - **Start Command**: `npm start`
-   - **Health Check Path**: `/api/health`
-5. Add Environment Variables:
-   - `DATABASE_URL`: Your Supabase Session Pooler connection string.
-   - `JWT_SECRET`: Your generated 32+ char secret.
-   - `CLIENT_URL`: Your frontend Vercel URL (e.g. `https://your-app.vercel.app`).
-   - `ADMIN_EMAIL`: `admin@k12hunar.com`
-   - `ADMIN_PASSWORD`: `Admin@12345`
+bash
+curl -s $API/inquiries/stats -H "Authorization: Bearer $TOKEN" | jq '.total'   # note the number
 
-### Frontend on Vercel
-1. In Vercel Dashboard, click **Add New...** -> **Project**.
-2. Select your repository.
-3. Configure settings:
-   - **Root Directory**: Select `frontend`.
-   - **Framework Preset**: `Vite`.
-4. Add Environment Variable:
-   - `VITE_API_URL`: Your Render backend URL + `/api` (e.g. `https://your-backend.onrender.com/api`).
-5. Click **Deploy**.
-*(The included `frontend/vercel.json` automatically handles SPA client-side routing for `/admin` and `/admin/login`).*
+curl -i -X POST $API/inquiries -H "Content-Type: application/json" -d '{
+  "userType":"Parent","category":"Scholarship","name":"Bot Test",
+  "email":"bot@example.com","phone":"+919876543210",
+  "message":"This submission should be silently discarded.",
+  "website":"i-am-a-bot"}'
 
----
+curl -s $API/inquiries/stats -H "Authorization: Bearer $TOKEN" | jq '.total'   # same number
 
-## Maintenance
+Duplicate protection. Sending the same inquiry twice within 10 minutes returns 201 the first time and 200 with the existing record the second time:
 
-### Official Program Links Health Check
+bash
+BODY='{"userType":"Student","category":"Admission","name":"Aarav Sharma","email":"aarav.sharma@example.com","phone":"+919876543210","message":"Please share the admission process and key dates."}'
+curl -s -o /dev/null -w "%{http_code}\n" -X POST $API/inquiries -H "Content-Type: application/json" -d "$BODY"
+curl -s -o /dev/null -w "%{http_code}\n" -X POST $API/inquiries -H "Content-Type: application/json" -d "$BODY"
 
-To verify that all featured event URLs on the official portal (`k12hunar.com`) are active and returning HTTP 200 without downloading or parsing external page content:
+CSV formula injection. Submit a name that starts with =, export, and confirm the cell is prefixed with a single quote:
 
-```bash
+bash
+curl -s -o /dev/null -X POST $API/inquiries -H "Content-Type: application/json" -d '{
+  "userType":"Parent","category":"General Query","name":"=SUM(1+1)",
+  "email":"csv@example.com","phone":"+919876543211",
+  "message":"Checking that spreadsheet formulas are neutralized."}'
+
+curl -s "$API/inquiries/export" -H "Authorization: Bearer $TOKEN" | grep "SUM(1+1)"
+# the cell should begin with a single quote: '=SUM(1+1)
+
+Tracker privacy and rate limit. An unknown lookup returns a generic 404. The tracker allows 10 requests per 15 minutes per IP, so the later requests below should return 429:
+
+bash
+for i in $(seq 1 12); do
+  curl -s -o /dev/null -w "%{http_code} " -X POST $API/track \
+    -H "Content-Type: application/json" \
+    -d '{"reference":"KH-AAAAAAAA","email":"nobody@example.com"}'
+done; echo
+
+Login lockout. After 5 failed attempts the API answers 429. Test it with a made-up email such as nobody@example.com so the real admin is not locked out:
+
+bash
+for i in $(seq 1 6); do
+  curl -s -o /dev/null -w "%{http_code} " -X POST $API/auth/login \
+    -H "Content-Type: application/json" \
+    -d '{"email":"nobody@example.com","password":"wrong-password"}'
+done; echo
+
+[!WARNING] The rate-limit and lockout tests restrict your own IP or email for about 15 minutes. Do not run them right before a demo or a submission check. Restarting a local backend resets in-memory rate limiters.
+
+</details>
+Reproducing the query plan
+<details> <summary><strong>See the indexes at work</strong> (click to expand)</summary>
+
+Open the Supabase SQL Editor and run:
+
+sql
+EXPLAIN ANALYZE
+SELECT id, name, category, status, created_at, COUNT(*) OVER()
+FROM inquiries
+WHERE category = 'Scholarship' AND lower(name) % 'priya'
+ORDER BY created_at DESC
+LIMIT 10;
+
+Look for a Bitmap Index Scan on idx_inquiries_name_trgm and a single query that returns both the rows and the total count (COUNT(*) OVER()), which avoids a separate count query.
+
+On a small table PostgreSQL may choose a sequential scan because it is cheaper. To see the index plan anyway, force it for the session:
+
+sql
+SET enable_seqscan = off;
+EXPLAIN ANALYZE
+SELECT id, name, category, status, created_at, COUNT(*) OVER()
+FROM inquiries
+WHERE category = 'Scholarship' AND lower(name) % 'priya'
+ORDER BY created_at DESC
+LIMIT 10;
+RESET enable_seqscan;
+
+Treat the timings as a demonstration on your own data, not as a benchmark.
+
+</details>
+Pre-submission checklist
+
+Run this against the deployed site, in a private browser window and on a phone:
+
+ GET /api/health responds, and /api/docs loads
+ Home page loads with no console or CORS errors
+ A new inquiry submits and shows a reference code
+ The code and email work on /track
+ The evaluator account signs in at /admin/login
+ Category filter, user type filter and search work, and refreshing /admin does not return a 404
+ A status change appears in /admin/activity
+ Unauthenticated GET /api/inquiries returns 401
+ backend/schema.sql, both .env.example files and this README are in the repository
+ No .env file or secret is committed (git ls-files | grep -i "\.env" lists only .env.example files)
+API Reference
+
+Full interactive documentation is served at /api/docs (Swagger UI, OpenAPI 3). Protected routes require Authorization: Bearer <token>.
+
+Method	Endpoint	Access	Description
+GET	/api/health	Public	Health check, also used to wake the server
+GET	/api/docs	Public	Interactive OpenAPI documentation
+GET	/api/public/stats	Public (rate limited, cached)	Aggregate figures for the Home page, no personal data
+POST	/api/inquiries	Public (rate limited)	Submit an inquiry (Zod validated, honeypot protected)
+POST	/api/track	Public (rate limited)	Look up status by reference code and email
+POST	/api/auth/login	Public (5 attempts per 15 minutes)	Admin login, returns a JWT
+POST	/api/auth/otp/send	Public (rate limited)	Send an email one-time code, available when email delivery is configured
+POST	/api/auth/otp/verify	Public (rate limited)	Verify the one-time code and start a session
+GET	/api/auth/me	Admin	Current admin profile
+PATCH	/api/auth/password	Admin	Change password, revokes other sessions
+POST	/api/auth/logout-all	Admin	Revoke all sessions for the current admin
+GET	/api/admins/options	Admin	Active admins available for assignment
+GET	/api/inquiries	Admin	List with filters, search, sorting and pagination
+GET	/api/inquiries/stats	Admin	Totals and counts by status
+GET	/api/inquiries/analytics	Admin	Time series and category distribution
+GET	/api/inquiries/export	Admin	CSV export of the filtered list
+GET	/api/inquiries/:id	Admin	Full inquiry with notes, timeline and related inquiries
+PATCH	/api/inquiries/:id/status	Admin	Update status (audit logged)
+PATCH	/api/inquiries/:id/priority	Admin	Update priority
+PATCH	/api/inquiries/:id/assign	Admin	Assign or unassign an admin
+PATCH	/api/inquiries/bulk-status	Admin	Update the status of several inquiries
+GET	/api/inquiries/:id/notes	Admin	List internal notes
+POST	/api/inquiries/:id/notes	Admin	Add an internal note
+GET	/api/activity	Admin	Cursor-paginated audit feed
+
+Common query parameters for GET /api/inquiries: page, limit, category, userType, status, search, sort, order.
+
+Errors use one consistent shape:
+
+json
+{ "error": { "message": "Human-readable description" } }
+Keyboard Shortcuts
+Shortcut	Scope	Action
+Ctrl / Cmd + K	Admin	Open the command palette
+?	Admin	Show the shortcuts cheat sheet
+/	Dashboard	Focus the search box
+T	Admin	Switch to table view
+B	Admin	Switch to pipeline board
+Esc	Admin	Close the drawer, palette or dialog
+Ctrl + Enter	Drawer	Save the internal note
+[ and ]	Drawer	Previous and next inquiry
+Security
+Area	Implementation
+Authentication	Custom JWT flow with bcryptjs hashing and jsonwebtoken signing. No Supabase Auth. Admins are provisioned with the seed script.
+Timing attacks	When an email is unknown, login still runs a bcrypt comparison against a dummy hash so response times do not reveal which accounts exist.
+Brute force	Login is limited to 5 attempts per 15 minutes per IP. The tracker and public form have their own limits.
+Session revocation	Tokens carry a version. Changing a password or choosing "sign out everywhere" increments token_version, which invalidates older tokens immediately.
+Password policy	Minimum length with upper case, lower case, number and symbol requirements.
+SQL injection	Every query uses parameterized placeholders. Sort columns come from whitelists.
+Input validation	Zod schemas on the client and the server, plus database CHECK constraints.
+Spam protection	Hidden honeypot field and duplicate-submission detection on the public form.
+Privacy	The tracker needs both the reference code and the email, answers unknown lookups with the same generic 404, and returns only status information.
+CSV exports	Cells starting with =, +, - or @ are neutralized to prevent formula injection.
+HTTP hardening	helmet security headers and a CORS allow-list restricted to CLIENT_URL.
+Secrets	Environment variables only. .env files are git-ignored and only .env.example is committed.
+Privacy of visual effects	The WebGL backgrounds contain no camera or microphone code.
+
+[!NOTE] Tokens are sent as Bearer tokens rather than cookies because the frontend and API run on different origins. See ADR-002 for the trade-offs.
+
+Performance and Accessibility
+Lazy-loaded effects: each WebGL background and the heavier sections load in separate chunks, so the first paint is not blocked.
+Automatic fallbacks: reduced motion, narrow screens, low-memory or low-core devices, data-saver mode and missing WebGL switch to a pure CSS background. Users can also set Background effects in the admin settings.
+Pixel ratio cap and pausing: rendering is capped and pauses when the tab is hidden or the effect is off-screen.
+Server-side data work: filtering, search, sorting and pagination run in SQL, so the browser receives only the page it needs.
+Accessibility: semantic landmarks, labeled form controls, visible focus rings, keyboard-operable table, board, drawer and command palette, and prefers-reduced-motion support.
+Layout stability: reserved dimensions, self-hosted fonts and skeleton loaders limit layout shift.
+Deployment
+
+Recommended order: database → backend → frontend → connect them.
+
+1. Database (Supabase)
+
+Run the database setup against your production DATABASE_URL, including db:migrate and seed:admin.
+
+2. Backend on Render
+Push the repository to GitHub.
+In Render choose New → Web Service and select the repository.
+Settings:
+Root directory: backend
+Build command: npm install
+Start command: npm start
+Health check path: /api/health
+Environment variables:
+NODE_ENV=production
+DATABASE_URL (session pooler string)
+JWT_SECRET (32+ random characters)
+JWT_EXPIRES_IN=8h
+CLIENT_URL (set after the frontend is deployed)
+Check https://<your-service>.onrender.com/api/health.
+3. Frontend on Vercel
+In Vercel choose Add New → Project and select the repository.
+Settings:
+Root directory: frontend
+Framework preset: Vite
+Environment variable: VITE_API_URL=https://<your-service>.onrender.com/api
+Deploy. The included frontend/vercel.json rewrites client routes so refreshing /admin works.
+4. Connect and verify
+Copy the Vercel URL (no trailing slash) into CLIENT_URL on Render and redeploy the backend.
+Run the smoke test against the live API.
+Walk through the six-step evaluator path in a private browser window and on a phone.
+Free-tier notes
+The Render free tier sleeps after inactivity, so the first request can take up to about a minute.
+Free Supabase projects can pause after a period of inactivity. Check the current policy and resume the project from the dashboard if needed.
+An external uptime monitor that calls /api/health every 10 to 14 minutes can keep the API warm during an evaluation window.
+
+See docs/DEPLOY-CHECKLIST.md for a printable checklist.
+
+Troubleshooting
+<details> <summary><strong>Common problems and fixes</strong> (click to expand)</summary>
+Symptom	Likely cause	Fix
+Database connection times out or ENETUNREACH on Render	Direct Supabase host is IPv6-only	Use the session pooler connection string
+password authentication failed	Wrong password or unescaped special characters	Re-check the password and URL-encode symbols (@ → %40)
+Browser shows a CORS error	CLIENT_URL does not exactly match the frontend origin	Use the exact origin with no trailing slash and redeploy the backend
+Deployed site calls localhost	VITE_API_URL was missing at build time	Set it in Vercel and redeploy the frontend
+Refreshing /admin returns 404	SPA rewrite not applied	Make sure Vercel's root directory is frontend so vercel.json is used
+401 after changing the password	Expected: other sessions are revoked	Sign in again
+First load is very slow	Hosting free tier is waking up	Wait for the banner to clear or call /api/health first
+Backgrounds are static or plain	Reduced motion, small or low-power device, or effects turned off	Check the OS motion setting and Settings → Background effects
+Missing or invalid environment variable on boot	Required variable not set	Compare .env with .env.example
+</details>
+Maintenance
+Official program links check
+
+The Featured Programs section links to official event pages on k12hunar.com. To confirm they still respond:
+
+bash
 cd frontend
 npm run check:links
-```
 
-This utility:
-- Reads typed event constants from `src/features/home/programs.ts`.
-- Sends polite `HEAD` requests with a 10-second timeout and descriptive User-Agent (`K12Hunar-LinkHealthChecker/1.0`).
-- Validates the 3 official event pages:
-  - `bsef-2026`: `https://k12hunar.com/events/72`
-  - `hrip`: `https://k12hunar.com/events/111`
-  - `hsip`: `https://k12hunar.com/events/107`
-- Operates under a warn-only policy (exits with code 0) and is excluded from CI and production app bundles.
+The script reads the typed constants in src/features/home/programs.ts, sends one polite HEAD request per URL with a 10 second timeout and a descriptive user agent, and prints the status. It only warns (exit code 0), never downloads page content, and is not part of the production bundle.
 
----
+Program details are indicative. Confirm final dates on the official pages.
 
-## Security & Production Hardening
+Architecture Decision Records
+Record	Topic
+ADR-001	Supabase pooler connection
+ADR-002	JWT Bearer tokens versus cookies
+ADR-003	Timing-safe authentication and brute-force protection
+ADR-004	Server-side filtering, search and pagination
+ADR-005	WebGL backgrounds and fallbacks
 
-- **No Supabase Auth Used**: Pure PostgreSQL connection via `pg` library.
-- **SQL Injection Defense**: 100% of database queries use parameterized `$1, $2` parameters. No raw string interpolation.
-- **Timing Attack Mitigation**: When login fails on an unknown email, bcrypt still computes a hash comparison against a precomputed dummy hash to ensure constant response times.
-- **CSV Formula Injection Mitigation**: Sanitizes all export cells that begin with `=, +, -, @` by prepending an apostrophe (`'`).
-- **XSS & HTTP Headers**: `helmet()` sets strict CSP, HSTS, and frameguard protections.
-- **CORS Protection**: Access strictly restricted to whitelisted frontend origins.
+Related documents: Architecture and sequence flows · ER diagram · Deployment checklist
+
+Roadmap
+Superadmin team management page, so admins can be created and deactivated from the UI
+Email notifications for new inquiries and confirmation messages with the reference code
+Playwright end-to-end tests in CI for the full submit, track, triage flow
+Refresh tokens with httpOnly cookies if the frontend and API move to one domain
+Saved filter views and a printable weekly summary
+Hindi and English language toggle for public pages
+Credits and Attributions
+React Bits: Aero Shards, Grid Scan and Ghost Fibers backgrounds (adapted), Glass Icons, Masked Heading, Depth Carousel and Gooey Nav. Please refer to the React Bits repository and each component's source header for license terms.
+shadcn/ui and Radix UI for accessible primitives.
+Lucide, Recharts, dnd kit, Framer Motion and Sonner.
+Fontsource for self-hosted Space Grotesk and Inter.
+
+This is an independent project built for a full-stack assessment. K12 Hunar names, event titles and links belong to their respective owners, and program details shown on the Home page are indicative.
+
+License
+
+Released under the MIT License.
+
+Author
+
+Utkarsh Dubey
+
+GitHub: @utkarshdubey
+<div align="center">
+
+If this project helped you, consider giving the repository a star.
+
+</div>
