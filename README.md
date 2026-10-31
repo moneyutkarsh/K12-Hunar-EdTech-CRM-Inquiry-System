@@ -103,7 +103,6 @@
 | ![Admin dashboard](dashboard.png) | ![Pipeline board](board.png) 
 
 | Public tracker | 
-| :---: | :---: |
 | ![Tracker](tracker.png)
 
 ---
