@@ -96,7 +96,7 @@
 
 | Home | Inquiry form |
 | :---: | :---: |
-| ![Home page](docs/screenshots/readme/home.png) | ![Inquiry form](docs/screenshots/readme/inquiry.png) |
+| ![Home page](Home.png) | ![Inquiry form](docs/screenshots/readme/inquiry.png) |
 
 | Admin dashboard | Pipeline board |
 | :---: | :---: |
