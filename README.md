@@ -96,15 +96,15 @@
 
 | Home | Inquiry form |
 | :---: | :---: |
-| ![Home page](Home.png) | ![Inquiry form](docs/screenshots/readme/inquiry.png) |
+| ![Home page](Home.png) | ![Inquiry form](Inquiry.png) |
 
 | Admin dashboard | Pipeline board |
 | :---: | :---: |
-| ![Admin dashboard](docs/screenshots/readme/dashboard.png) | ![Pipeline board](docs/screenshots/readme/board.png) |
+| ![Admin dashboard](dashboard.png) | ![Pipeline board](board.png) 
 
 | Public tracker | Activity feed |
 | :---: | :---: |
-| ![Tracker](docs/screenshots/readme/tracker.png) | ![Activity feed](docs/screenshots/readme/activity.png) |
+| ![Tracker](docs/screenshots/readme/tracker.png)
 
 ---
 
