@@ -102,7 +102,7 @@
 | :---: | :---: |
 | ![Admin dashboard](dashboard.png) | ![Pipeline board](board.png) 
 
-| Public tracker | Activity feed |
+| Public tracker | 
 | :---: | :---: |
 | ![Tracker](docs/screenshots/readme/tracker.png)
 
