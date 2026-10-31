@@ -4,7 +4,6 @@
 
 **A full-stack EdTech inquiry platform. Visitors submit and track inquiries, and the K12 Hunar team triages them from a secure admin dashboard.**
 
-[![CI Build & Test](https://github.com/utkarshdubey/k12-hunar-crm/actions/workflows/ci.yml/badge.svg)](https://github.com/utkarshdubey/k12-hunar-crm/actions)
 ![License: MIT](https://img.shields.io/badge/License-MIT-FFD60A.svg)
 ![Node 20+](https://img.shields.io/badge/Node-20%2B-339933.svg?logo=node.js&logoColor=white)
 ![React 19](https://img.shields.io/badge/React-19-61DAFB.svg?logo=react&logoColor=black)
